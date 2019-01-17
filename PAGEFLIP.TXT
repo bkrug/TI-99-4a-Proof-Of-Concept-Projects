@@ -1,0 +1,103 @@
+       DEF  RUNTST
+       REF  VMBW,VWTR
+       REF  VDPWA,VDPWD
+
+* A program to test the concept of page
+* flipping in video games
+
+MSG1   TEXT 'All is quite on the Western front.'
+MSG2   TEXT 'Build it and they will come.'
+MSG3
+       EVEN
+SPRT1  DATA >20A0,>800D
+       DATA >D000,>0000
+SPRT2  DATA >20A0,>810D
+       DATA >D000,>0000
+CHR80  DATA >FF81,>8181
+       DATA >8181,>81FF
+CHR81  DATA >FFC1,>A191
+       DATA >8985,>83FF
+* Current value of VDP register 2
+* and the number which must be added to flip page
+VDPRG2 DATA >0200
+ADDRG2 DATA -4
+* Current value of VDP register 5
+* and the number which must be added to flip page
+VDPRG5 DATA >0506
+ADDRG5 DATA -32
+* Address defining address of user-
+* defined service routine
+USRISR EQU  >83C4
+* Time remaining before page flip
+TIMER  DATA 60
+* When true, time to flip page
+FLPNOW DATA >FFFF
+*
+
+RUNTST 
+* Define the interupt routine
+       LI   R0,TIMINT
+       MOV  R0,@USRISR
+* Clear screen on second page
+* Use little endian in R0
+* Write to address >1000, with write bit set (bit 1)
+       LI   R0,>0050
+       LI   R1,>2000
+       LI   R2,24*32
+       MOVB R0,@VDPWA
+       SWPB R0
+       MOVB R0,@VDPWA
+CLRLP  NOP
+       MOVB R1,@VDPWD
+       DEC  R2
+       JNE  CLRLP
+* Write messages to both pages
+       LI   R0,>C4
+       LI   R1,MSG1
+       LI   R2,MSG2-MSG1
+       BLWP @VMBW
+       LI   R0,>10E4
+       LI   R1,MSG2
+       LI   R2,MSG3-MSG2
+       BLWP @VMBW
+* Write character definitions to Sprit Descriptor Table
+       LI   R0,>400
+       LI   R1,CHR80
+       LI   R2,16
+       BLWP @VMBW
+* Write sprites to Sprite Attribute list on both pages
+       LI   R0,>300
+       LI   R1,SPRT1
+       LI   R2,8
+       BLWP @VMBW
+       LI   R0,>1300
+       LI   R1,SPRT2
+       LI   R2,8
+       BLWP @VMBW
+* Wait to flip pages
+FLPLP  LIMI 2
+       LIMI 0
+       MOV  @FLPNOW,@FLPNOW
+       JNE  FLPLP
+* Reset timer and flip flag
+       SETO @FLPNOW
+       LI   R0,60
+       MOV  R0,@TIMER
+* Flip page for screen image table
+       NEG  @ADDRG2
+       A    @ADDRG2,@VDPRG2
+       MOV  @VDPRG2,R0
+       BLWP @VWTR
+* Flip page for screen attribute list
+       NEG  @ADDRG5
+       A    @ADDRG5,@VDPRG5
+       MOV  @VDPRG5,R0
+       BLWP @VWTR
+* Start over
+       JMP  FLPLP
+       
+TIMINT DEC  @TIMER
+       JNE  TIM2
+       CLR  @FLPNOW
+TIM2   RT
+       END

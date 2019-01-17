@@ -1,0 +1,336 @@
+       DEF  MP01CL,MP01CD,MP01CG       ; Colors - Address & End Address & Length
+       DEF  MP01PT,MP01PD,MP01PG       ; Patterns - Address & End Address & Length
+       DEF  MP01SP,MP01SD,MP01SG       ; Sprites - Address & End Address & Length
+       DEF  MP01HD                     ; Map Header
+       DEF  MP01RW,MP01RD,MP01RG       ; Screen Image -  Address & End Adress & Length
+
+****************************************
+* Header
+****************************************
+* == Map #0 ==                          
+MP01HD DATA >0034,>0015,MP01RG         ; Width, Height, Size
+       DATA MP01CL,MP01CD,MP01CG       ; Colors - Address & End Address & Length
+       DATA MP01PT,MP01PD,MP01PG       ; Patterns - Address & End Address & Length
+       DATA MP01SP,MP01SD,MP01SG       ; Sprites - Address & End Address & Length
+       DATA MP01RW,MP01RD,MP01RG       ; Screen Image -  Address & End Adress & Length
+****************************************
+* Colorset Definitions                  
+****************************************
+MP01CL BYTE >B1,>B1,>41,>41            ; Look at value in MP01CH and divide by 8.
+       BYTE >E1,>E1,>E1,>E2            ; This will tell you what the first color group you need to define is.
+       BYTE >E1,>E2,>E1,>E2            ;
+       BYTE >10,>10,>E1,>E1            ;
+       BYTE >E1,>E1,>E1,>E1            ;
+MP01CD
+MP01CG EQU  MP01CD-MP01CL
+****************************************
+* Character Patterns                    
+****************************************
+MP01PT DATA >0060                      ; Specify code for first scrollable character.
+PAT96  DATA >1818,>1818,>18FF,>7E3C    ; Character >60 and >61 together form a 16-pixel character.
+PAT97  DATA >0000,>0000,>0000,>0000    ; Skip patterns for the next 6 characters. They are auto-generated.
+PAT104 DATA >0000,>0000,>0000,>0000    ;
+PAT105 DATA >1818,>1818,>18FF,>7E3C    ;
+PAT112 DATA >0000,>0000,>0000,>0000    ;
+PAT113 DATA >0014,>1414,>1414,>1400    ;
+PAT120 DATA >0014,>1414,>1414,>1400    ;
+PAT121 DATA >0000,>0000,>0000,>0000    ;
+PAT128 DATA >0000,>0000,>0000,>0000    ;
+PAT129 DATA >FF81,>BDBD,>BDBD,>81FF    ;
+PAT136 DATA >FF81,>BDBD,>BDBD,>81FF    ;
+PAT137 DATA >FF81,>BDBD,>BDBD,>81FF    ;
+PAT144 DATA >0000,>0000,>0000,>0000    ;
+PAT145 DATA >FFFF,>FFFF,>FFFF,>FFFF    ;
+PAT152 DATA >FEFE,>FFFF,>FFFF,>FFFF    ;
+PAT153 DATA >0000,>111B,>9BBB,>FFFF    ;
+PAT160 DATA >FF81,>BDBD,>BDBD,>81FF    ;
+PAT161 DATA >0000,>0000,>0000,>0000    ;
+PAT168 DATA >0000,>111B,>9BBB,>FFFF    ;
+PAT169 DATA >FFFF,>FFFF,>FFFF,>FFFF    ;
+PAT176 DATA >FFFF,>FFFF,>FFFF,>FFFF    ;
+PAT177 DATA >0000,>0000,>0000,>0000    ;
+PAT184 DATA >0000,>111B,>9BBB,>FFFF    ;
+PAT185 DATA >0000,>111B,>9BBB,>FFFF    ;
+PAT192 DATA >0000,>0000,>0000,>0000    ;
+PAT193 DATA >0000,>0000,>0000,>0000    ;
+PAT200 DATA >0000,>0000,>0000,>0000    ;
+PAT201 DATA >0000,>0000,>0000,>0000    ;
+PAT208 DATA >FFFF,>FFEF,>FFFF,>FFFF    ;
+PAT209 DATA >FFFF,>FFFB,>FFBF,>FFFF    ;
+PAT216 DATA >FFFF,>FFFB,>FFBF,>FFFF    ;
+PAT217 DATA >FFFF,>FFEF,>FFFF,>FFFF    ;
+PAT224 DATA >FFFF,>FFEF,>FFFF,>FFFF    ;
+PAT225 DATA >FFEF,>C7EF,>FFFF,>FFFF    ;
+PAT232 DATA >FFFF,>FFFB,>FFBF,>FFFF    ;
+PAT233 DATA >FFFF,>FFFF,>EFC7,>EFFF    ;
+PAT240 DATA >FFEF,>C7EF,>FFFF,>FFFF    ;
+PAT241 DATA >FFFF,>FFEF,>FFFF,>FFFF    ;
+PAT248 DATA >FFFF,>FFFF,>EFC7,>EFFF    ;
+PAT249 DATA >FFFF,>FFFB,>FFBF,>FFFF    ;
+MP01PD
+MP01PG EQU  MP01PD-MP01PT
+****************************************
+* Sprite Patterns                       
+****************************************
+MP01SP
+SPR0   DATA >0000,>0006,>0F1F,>3B53    ; Color 2
+       DATA >670F,>0F0F,>171B,>1DFC    ; 
+       DATA >183C,>7478,>F8E0,>D3B5    ; 
+       DATA >BE98,>0000,>80C0,>E0E0    ; 
+SPR1   DATA >F8C0,>C080,>0001,>0101    ; Color 2
+       DATA >0000,>0000,>0000,>0000    ; 
+       DATA >7070,>E0E0,>C0C0,>E0F0    ; 
+       DATA >0000,>0000,>0000,>0000    ; 
+SPR2   DATA >0000,>0000,>0103,>0303    ; Color 2
+       DATA >0102,>0303,>0101,>0202    ; 
+       DATA >60F0,>D0E0,>F0C0,>C0E0    ; 
+       DATA >E0D0,>30C0,>C0C0,>E0E0    ; 
+SPR3   DATA >0707,>0E1E,>1E0D,>0501    ; Color 2
+       DATA >0000,>0000,>0000,>0000    ; 
+       DATA >7070,>E0E0,>C0C0,>E0F0    ; 
+       DATA >0000,>0000,>0000,>0000    ; 
+SPR4   DATA >0000,>0000,>0E1D,>3B53    ; Color 2
+       DATA >6707,>0F0F,>1E1D,>1D1C    ; 
+       DATA >183C,>74F8,>F8E0,>F0FE    ; 
+       DATA >BD9E,>0000,>80C0,>E0E0    ; 
+SPR5   DATA >FCF8,>C0C0,>8001,>0101    ; Color 2
+       DATA >0000,>0000,>0000,>0000    ; 
+       DATA >7070,>E0E0,>C0C0,>E0F0    ; 
+       DATA >0000,>0000,>0000,>0000    ; 
+SPR6   DATA >0000,>0000,>0103,>0303    ; Color 2
+       DATA >0106,>0707,>0301,>0001    ; 
+       DATA >60F0,>D0E0,>F0C0,>C0E0    ; 
+       DATA >E0D0,>3080,>C0E0,>E0E0    ; 
+SPR7   DATA >0307,>0F0E,>0607,>0000    ; Color 2
+       DATA >0000,>0000,>0000,>0000    ; 
+       DATA >C080,>40C0,>C040,>E0F0    ; 
+       DATA >0000,>0000,>0000,>0000    ; 
+SPR8   DATA >0000,>3F3F,>3F3F,>3F3F    ; Color 8
+       DATA >3F3F,>0000,>0000,>0000    ; 
+       DATA >0000,>C0C0,>C0C0,>C0C0    ; 
+       DATA >C0C0,>0000,>0000,>0000    ; 
+SPR9   DATA >0000,>3F20,>2F29,>292F    ; Color 8
+       DATA >203F,>0000,>0000,>0000    ; 
+       DATA >0000,>C040,>4040,>4040    ; 
+       DATA >40C0,>0000,>0000,>0000    ; 
+SPR10  DATA >0000,>1E73,>C0C0,>731E    ; Color 8
+       DATA >0000,>0000,>0000,>0000    ; 
+       DATA >0000,>0080,>C0C0,>8000    ; 
+       DATA >0000,>0000,>0000,>0000    ; 
+SPR11  DATA >0000,>1E61,>8C8C,>611E    ; Color 8
+       DATA >0000,>0000,>0000,>0000    ; 
+       DATA >0000,>0080,>4040,>8000    ; 
+       DATA >0000,>0000,>0000,>0000    ; 
+SPR12  DATA >040E,>1F3F,>7FFF,>7F3F    ; Color 5
+       DATA >1F0E,>0400,>0000,>0000    ; 
+       DATA >0000,>0080,>C0E0,>C080    ; 
+       DATA >0000,>0000,>0000,>0000    ; 
+SPR13  DATA >040E,>1B31,>64CA,>6431    ; Color 5
+       DATA >1B0E,>0400,>0000,>0000    ; 
+       DATA >0000,>0080,>C060,>C080    ; 
+       DATA >0000,>0000,>0000,>0000    ; 
+SPR14  DATA >0C1E,>1233,>2121,>3312    ; Color 5
+       DATA >1E0C,>0000,>0000,>0000    ; 
+       DATA >0000,>0000,>0000,>0000    ; 
+       DATA >0000,>0000,>0000,>0000    ; 
+SPR15  DATA >0C12,>1221,>2D2D,>2112    ; Color 5
+       DATA >120C,>0000,>0000,>0000    ; 
+       DATA >0000,>0000,>0000,>0000    ; 
+       DATA >0000,>0000,>0000,>0000    ; 
+SPR16  DATA >040E,>3535,>4EFF,>4E35    ; Color 13
+       DATA >350E,>0400,>0000,>0000    ; 
+       DATA >0000,>8080,>40E0,>4080    ; 
+       DATA >8000,>0000,>0000,>0000    ; 
+SPR17  DATA >0404,>241F,>11F5,>111F    ; Color 13
+       DATA >2404,>0400,>0000,>0000    ; 
+       DATA >0000,>8000,>00E0,>0000    ; 
+       DATA >8000,>0000,>0000,>0000    ; 
+SPR18  DATA >0C1E,>1273,>C0C0,>7312    ; Color 13
+       DATA >1E0C,>0000,>0000,>0000    ; 
+       DATA >0000,>0080,>C0C0,>8000    ; 
+       DATA >0000,>0000,>0000,>0000    ; 
+SPR19  DATA >0C12,>1261,>8C8C,>6112    ; Color 13
+       DATA >120C,>0000,>0000,>0000    ; 
+       DATA >0000,>0080,>4040,>8000    ; 
+       DATA >0000,>0000,>0000,>0000    ; 
+SPR20  DATA >8080,>8080,>8080,>8080    ; Color 15
+       DATA >8080,>8080,>8080,>8080    ; 
+       DATA >0000,>0000,>0000,>0000    ; 
+       DATA >0000,>0000,>0000,>0000    ; 
+MP01SD
+MP01SG EQU  MP01SD-MP01SP
+****************************************
+* Map Data                              
+****************************************
+MP01RW
+* -- Map Row 0 --                       
+MD0    DATA >F0D0,>D8E0,>F0D0,>D8E0    ;
+       DATA >F0D0,>D8E0,>F0D0,>D8E0    ;
+       DATA >F0D0,>D8E0,>F0D0,>D8E0    ;
+       DATA >F0D0,>D8E0,>F0D0,>D8E0    ;
+       DATA >F0D0,>D8E0,>F0D0,>D8E0    ;
+       DATA >F0D0,>D8E0,>F0D0,>D8E0    ;
+       DATA >F0D0,>D8D0                ;
+* -- Map Row 1 --                       
+       DATA >2020,>2020,>6860,>2020    ;
+       DATA >2020,>2068,>6020,>2020    ;
+       DATA >2020,>6860,>2020,>2020    ;
+       DATA >2068,>6020,>2020,>2020    ;
+       DATA >6860,>2020,>2020,>2068    ;
+       DATA >6020,>2020,>2020,>6860    ;
+       DATA >2020,>2020                ;
+* -- Map Row 2 --                       
+       DATA >2020,>7078,>2020,>7078    ;
+       DATA >2020,>2020,>2020,>2020    ;
+       DATA >7078,>2020,>7078,>2020    ;
+       DATA >2020,>2020,>2020,>7078    ;
+       DATA >2020,>7078,>2020,>2020    ;
+       DATA >2020,>2020,>7078,>2020    ;
+       DATA >7078,>2020                ;
+* -- Map Row 3 --                       
+       DATA >2020,>7078,>2020,>7078    ;
+       DATA >2020,>2020,>2020,>2020    ;
+       DATA >7078,>2020,>7078,>2020    ;
+       DATA >2020,>2020,>2020,>7078    ;
+       DATA >2020,>7078,>2020,>2020    ;
+       DATA >2020,>2020,>7078,>2020    ;
+       DATA >7078,>2020                ;
+* -- Map Row 4 --                       
+       DATA >2020,>7078,>2020,>7078    ;
+       DATA >2020,>2020,>2020,>2020    ;
+       DATA >7078,>2020,>7078,>2020    ;
+       DATA >2020,>2020,>2020,>7078    ;
+       DATA >2020,>7078,>2020,>2020    ;
+       DATA >2020,>2020,>7078,>2020    ;
+       DATA >7078,>2020                ;
+* -- Map Row 5 --                       
+       DATA >2020,>2020,>2020,>2020    ;
+       DATA >2020,>2020,>2020,>2020    ;
+       DATA >2020,>2020,>2020,>2020    ;
+       DATA >2020,>2020,>2020,>2020    ;
+       DATA >2020,>2020,>2020,>2020    ;
+       DATA >2020,>2020,>2020,>2020    ;
+       DATA >2020,>2020                ;
+* -- Map Row 6 --                       
+       DATA >2090,>98B8,>B8B8,>B8A8    ;
+       DATA >B020,>2020,>2020,>2090    ;
+       DATA >98B8,>B8B8,>B8A8,>B020    ;
+       DATA >2020,>2020,>2090,>98B8    ;
+       DATA >B8B8,>B8A8,>B020,>2020    ;
+       DATA >2020,>2090,>98B8,>B8B8    ;
+       DATA >B8A8,>B020                ;
+* -- Map Row 7 --                       
+       DATA >2080,>8888,>8888,>8888    ;
+       DATA >A020,>2020,>2020,>2080    ;
+       DATA >8888,>8888,>8888,>A020    ;
+       DATA >2020,>2020,>2080,>8888    ;
+       DATA >8888,>8888,>88A0,>2020    ;
+       DATA >2020,>2080,>8888,>8888    ;
+       DATA >8888,>A020                ;
+* -- Map Row 8 --                       
+       DATA >2020,>2020,>6860,>2020    ;
+       DATA >2020,>2020,>2020,>2020    ;
+       DATA >2020,>6860,>2020,>2020    ;
+       DATA >2020,>2020,>2020,>2020    ;
+       DATA >6860,>2020,>8088,>A020    ;
+       DATA >2020,>2020,>2020,>6860    ;
+       DATA >2020,>2020                ;
+* -- Map Row 9 --                       
+       DATA >2020,>7078,>2020,>7078    ;
+       DATA >2020,>2020,>2020,>2020    ;
+       DATA >7078,>2020,>7078,>2020    ;
+       DATA >2020,>2020,>2020,>7078    ;
+       DATA >2020,>7078,>2080,>88A0    ;
+       DATA >2020,>2020,>7078,>2020    ;
+       DATA >7078,>2020                ;
+* -- Map Row 10 --                      
+       DATA >2020,>7078,>2020,>7078    ;
+       DATA >2020,>2020,>2020,>2020    ;
+       DATA >7078,>2020,>7078,>2020    ;
+       DATA >2020,>2020,>2020,>7078    ;
+       DATA >2020,>7078,>2020,>8088    ;
+       DATA >A020,>2020,>7078,>2020    ;
+       DATA >7078,>2020                ;
+* -- Map Row 11 --                      
+       DATA >2020,>7078,>2020,>7078    ;
+       DATA >2020,>2020,>2020,>2020    ;
+       DATA >7078,>2020,>7078,>2020    ;
+       DATA >2020,>2020,>2020,>7078    ;
+       DATA >2020,>7078,>2020,>2080    ;
+       DATA >88A0,>2020,>7078,>2020    ;
+       DATA >7078,>2020                ;
+* -- Map Row 12 --                      
+       DATA >2020,>2020,>2020,>2020    ;
+       DATA >2020,>2020,>2020,>2020    ;
+       DATA >2020,>2020,>2020,>2020    ;
+       DATA >2020,>2020,>2020,>2020    ;
+       DATA >2020,>2020,>2020,>2020    ;
+       DATA >8088,>A020,>2020,>2020    ;
+       DATA >2020,>2020                ;
+* -- Map Row 13 --                      
+       DATA >2090,>98B8,>B8B8,>B8A8    ;
+       DATA >B020,>2020,>2020,>2090    ;
+       DATA >98B8,>B8B8,>B8A8,>B020    ;
+       DATA >2020,>2020,>2090,>98B8    ;
+       DATA >B8B8,>B8A8,>B020,>2020    ;
+       DATA >2020,>2090,>98B8,>B8B8    ;
+       DATA >B8A8,>B020                ;
+* -- Map Row 14 --                      
+       DATA >2080,>8888,>8888,>8888    ;
+       DATA >A020,>2020,>2020,>2080    ;
+       DATA >8888,>8888,>8888,>A020    ;
+       DATA >2020,>2020,>8088,>8888    ;
+       DATA >8888,>8888,>A020,>2020    ;
+       DATA >2020,>2080,>8888,>8888    ;
+       DATA >8888,>A020                ;
+* -- Map Row 15 --                      
+       DATA >2020,>2020,>6860,>2020    ;
+       DATA >2020,>2020,>2020,>2020    ;
+       DATA >2020,>6860,>2020,>2020    ;
+       DATA >2020,>2080,>88A0,>2020    ;
+       DATA >6860,>2020,>2020,>2020    ;
+       DATA >2020,>2020,>2020,>6860    ;
+       DATA >2020,>2020                ;
+* -- Map Row 16 --                      
+       DATA >2020,>7078,>2020,>7078    ;
+       DATA >2020,>2020,>2020,>2020    ;
+       DATA >7078,>2020,>7078,>2020    ;
+       DATA >2020,>8088,>A020,>7078    ;
+       DATA >2020,>7078,>2020,>2020    ;
+       DATA >2020,>2020,>7078,>2020    ;
+       DATA >7078,>2020                ;
+* -- Map Row 17 --                      
+       DATA >2020,>7078,>2020,>7078    ;
+       DATA >2020,>2020,>2020,>2020    ;
+       DATA >7078,>2020,>7078,>2020    ;
+       DATA >2080,>88A0,>2020,>7078    ;
+       DATA >2020,>7078,>2020,>2020    ;
+       DATA >2020,>2020,>7078,>2020    ;
+       DATA >7078,>2020                ;
+* -- Map Row 18 --                      
+       DATA >2020,>7078,>2020,>7078    ;
+       DATA >2020,>2020,>2020,>2020    ;
+       DATA >7078,>2020,>7078,>2020    ;
+       DATA >8088,>A020,>2020,>7078    ;
+       DATA >2020,>7078,>2020,>2020    ;
+       DATA >2020,>2020,>7078,>2020    ;
+       DATA >7078,>2020                ;
+* -- Map Row 19 --                      
+       DATA >2020,>2020,>2020,>2020    ;
+       DATA >2020,>2020,>2020,>2020    ;
+       DATA >2020,>2020,>2020,>2080    ;
+       DATA >88A0,>2020,>2020,>2020    ;
+       DATA >2020,>2020,>2020,>2020    ;
+       DATA >2020,>2020,>2020,>2020    ;
+       DATA >2020,>2020                ;
+* -- Map Row 20 --                      
+       DATA >F8D8,>D0E8,>F8D8,>D0E8    ;
+       DATA >F8D8,>D0E8,>F8D8,>D0E8    ;
+       DATA >F8D8,>D0E8,>F8D8,>D0E8    ;
+       DATA >F8D8,>D0E8,>F8D8,>D0E8    ;
+       DATA >F8D8,>D0E8,>F8D8,>D0E8    ;
+       DATA >F8D8,>D0E8,>F8D8,>D0E8    ;
+       DATA >F8D8,>D0D8                ;
+MP01RD
+MP01RG EQU  MP01RD-MP01RW
+       END
