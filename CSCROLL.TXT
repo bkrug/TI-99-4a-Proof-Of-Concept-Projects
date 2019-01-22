@@ -73,6 +73,7 @@ WAITLP LIMI 2
        LI   R0,>60
        LI   R10,MP01HD
        BL   @DRWMAP
+       BL   @DRWPAT
        BL   @FLIPPG
 * Start over
        JMP  WAITLP
@@ -302,7 +303,20 @@ HSCRL1 MOVB *R9,R1
        C    R9,R8
        JL   HSCRL
 *
-* Copy patterns
+       MOV  @DRWRT,R11
+       RT
+DRWRT  DATA 0
+
+*
+* Define patterns for the scrollable map
+*
+* R3 - Pixel Scroll Amount
+* R4 - left-most byte is scroll direction
+* R5 - right-most scroll position
+* R6 - Column Scroll Amount
+* R10 - Address of map header
+DRWPAT MOV  R11,@DRWRT
+* Define starting position for VDP RAM
        MOVB @MINSCL,R0
        SRL  R0,8
        BL   @INTPAT
@@ -327,7 +341,6 @@ PSCRL1 MOVB R1,@VDPWD
 *
        MOV  @DRWRT,R11
        RT
-DRWRT  DATA 0
 
 *
 * Specify the initial screen position to write to.

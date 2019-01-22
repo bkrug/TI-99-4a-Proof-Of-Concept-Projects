@@ -65,7 +65,7 @@ MP01CG EQU  MP01CD-MP01CL
 ****************************************
 * Transition Character Pairs (from, to) 
 ****************************************
-MP01TR BYTE >61,>70                    ; #00 color 2/1 ERROR
+MP01TR BYTE >61,>70                    ; #00 color E/1
        BYTE >FF,>FF                    ; #01 unused
        BYTE >FF,>FF                    ; #02 unused
        BYTE >FF,>FF                    ; #03 unused
