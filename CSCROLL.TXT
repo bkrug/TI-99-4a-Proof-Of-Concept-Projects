@@ -19,9 +19,10 @@
 * Addresses
 USRISR EQU  >83C4        Address defining address of interupt routine
 *
-SPRTBL EQU  >1000        Address of Sprite Pattern Table
+SPRTBL EQU  >1800        Address of Sprite Pattern Table
 CLRTBL EQU  >380         Address of Color Table
-PTNTBL EQU  >800         Address of Charater Pattern Table
+PTNPG1 EQU  >800         Address of Character Pattern Table 1
+PTNPG2 EQU  >1000        Address of Character Pattern Table 2
 SCNPG1 EQU  >0           Address of Page 1 of the screen image table
 SCNPG2 EQU  >400         Address of Page 2 of the screen image table
 
@@ -30,8 +31,10 @@ SCNPG2 EQU  >400         Address of Page 2 of the screen image table
 *
 VDPRG2 DATA >0200        Current value of VDP register 2
 ADDRG2 DATA 1            Add this to Reg 2 to flip screen image page
+VDPRG4 DATA >0401        Current value of VDP register 4
+ADDRG4 EQU  ADDRG2       Add this to Reg 4 to flip the patter page
 VDPRG5 DATA >0506        Current value of VDP register 5
-ADDRG5 DATA >E           Add this to REg 5 to flip sprite attribute page
+ADDRG5 DATA >E           Add this to Reg 5 to flip sprite attribute page
 
 MAPWD  DATA 0            Width of current map
 MAPXT  DATA 0            Width of current map - >20 (screen width)
@@ -96,9 +99,11 @@ INTGAM
 *
 DRWFXD MOV  R11,@FXDRT
 * Write character patterns for non-scrolling characters
-       LI   R0,PTNTBL
+       LI   R0,PTNPG1
        LI   R1,FIXDPT
        LI   R2,FIXDPG
+       BLWP @VMBW
+       LI   R0,PTNPG2
        BLWP @VMBW
 * Write color definitions
        LI   R0,CLRTBL
@@ -216,48 +221,9 @@ XPDLP  CLR  R2
        MOVB *R3+,*R4+
        MOVB *R2+,*R4+
        MOVB *R3+,*R4+
-*
+* Loop to copy the next 16-pixel pattern
        C    R0,R1
        JL   XPDLP
-LOOP1  JMP  LOOP1
-
-* We are copying portions of 16-pixel characters
-* to 8-pixel characters
-* R3 - VDP address
-* R4 - address of leftmost 8 pixels
-* R5 - address of rightmost 8 pixels
-* R7 - 16 pixels
-* R8 - address of end of pattern data
-       MOVB @MINSCL,R3
-       SWPB R3
-       SLA  R3,3
-       AI   R3,PTNTBL              R3 = first char code * 8 + pattern table address
-       MOV  @PATRNB(10),R4
-       AI   R4,2
-       MOV  @PATRNB(10),R5
-       AI   R5,10
-       MOV  @PATRND(10),R8
-CHAR0  LI   R6,PATBUF
-CHAR1  MOVB *R5+,R7
-       SWPB R7
-       MOVB *R4+,R7
-CHAR2  MOVB R7,*R6
-       SLA  R7,1
-       AI   R6,8
-       CI   R6,PATEND
-       JL   CHAR2
-       AI   R6,PATBUF-PATEND+1
-       CI   R6,PATBUF+8
-       JL   CHAR1
-       MOV  R3,R0
-       LI   R1,PATBUF
-       LI   R2,PATEND-PATBUF
-       BLWP @VMBW
-       AI   R3,8*8
-       AI   R4,8
-       AI   R5,8
-       C    R4,R8
-       JL   CHAR0
        RT
 
 *
@@ -326,10 +292,8 @@ HSCRL  LIMI 2
        LIMI 0
        LI   R7,>20
 HSCRL1 MOVB *R9,R1
-       CB   R1,@MINSCL
-       JL   HSCRL2
-       AB   R3,R1
-HSCRL2 MOVB R1,@VDPWD
+       AB   @MINSCL,R1
+       MOVB R1,@VDPWD
        INC  R9
        DEC  R7
        JNE  HSCRL1
@@ -338,6 +302,29 @@ HSCRL2 MOVB R1,@VDPWD
        C    R9,R8
        JL   HSCRL
 *
+* Copy patterns
+       MOVB @MINSCL,R0
+       SRL  R0,8
+       BL   @INTPAT
+* Store position of 16-pixel pattern buffer in R9
+       LI   R9,PATBUF
+* Store end of pattern buffer in R8 (length of transition buffer * 8 + PATBUF )
+       MOV  @TRANSG(10),R8
+       SLA  R8,4
+       A    R9,R8
+* Copy pixel-shifted character to pattern buffer
+       MOV  R3,R0
+       SWPB R0
+       LIMI 2
+       LIMI 0
+PSCRL  MOV  *R9+,R1
+       MOV  R0,R0
+       JEQ  PSCRL1
+       SLA  R1,0
+PSCRL1 MOVB R1,@VDPWD
+       C    R9,R8
+       JL   PSCRL
+*
        MOV  @DRWRT,R11
        RT
 DRWRT  DATA 0
@@ -345,6 +332,7 @@ DRWRT  DATA 0
 *
 * Specify the initial screen position to write to.
 *
+* R0 should already contain a screen position
 INTCHR MOV  @ADDRG2,@ADDRG2
        JLT  ITCHR0
        AI   R0,SCNPG2
@@ -356,13 +344,33 @@ ITCHR0 ORI  R0,>4000               Set write bit to true
        RT
 
 *
+* Specify the initial pattern address to write to.
+*
+* R0 should already contain an ASCII code
+INTPAT SLA  R0,3
+       MOV  @ADDRG4,@ADDRG4
+       JLT  ITPAT1
+       AI   R0,PTNPG2
+       JMP  ITPAT2
+ITPAT1 AI   R0,PTNPG1
+ITPAT2 ORI  R0,>4000               Set write bit to true
+       SWPB R0
+       MOVB R0,@VDPWA
+       SWPB R0
+       MOVB R0,@VDPWA
+       RT
+
+*
 * Flip Page
 *
 FLIPPG
-* Flip page for screen image table
+* Flip page for screen image table and pattern table
        A    @ADDRG2,@VDPRG2
+       A    @ADDRG4,@VDPRG4
        NEG  @ADDRG2
        MOV  @VDPRG2,R0
+       BLWP @VWTR
+       MOV  @VDPRG4,R0
        BLWP @VWTR
 * Flip page for sprite attribute list
 *       A    @ADDRG5,@VDPRG5

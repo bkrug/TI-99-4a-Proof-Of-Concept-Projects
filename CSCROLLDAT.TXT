@@ -9,7 +9,7 @@
 * Header
 ****************************************
 * == Map #0 ==                          
-MP01HD DATA >0033,>0015,>0060          ; Width, Height, Minimum Character
+MP01HD DATA >0034,>0015,>0060          ; Width, Height, Minimum Character
        DATA MP01CL,MP01CD,MP01CG       ; Colors - Address & End Address & Length
        DATA MP01PT,MP01PD,MP01PG       ; Patterns - Address & End Address & Length
        DATA MP01TR,MP01TD,MP01TG       ; Transition
@@ -58,7 +58,7 @@ MP01PG EQU  MP01PD-MP01PT
 * Colorset Definitions                  
 ****************************************
        DATA 6                          ;
-MP01CL BYTE >21,>41,>B1,>E1            ;
+MP01CL BYTE >E1,>41,>B1,>E1            ;
        BYTE >E1,>E2                    ;
 MP01CD
 MP01CG EQU  MP01CD-MP01CL
