@@ -41,10 +41,12 @@ MAPWD  DATA 0            Width of current map
 MAPXT  DATA 0            Width of current map - >20 (screen width)
 
 * Timer stuff
-TIMER  DATA >FFFF        Decrements once roughly every 2 ms.
-TIMER2 DATA >FFFC        Decreases by 4 every several microseconds
-MIDTIM DATA >FFFF        Holds the middle two bytes of the four bytes in TIMER and TIMER2
-SCRLTM DATA >F000        When MIDTIM <= this value, scroll left or right
+TIMER  DATA >FFFF        Decrements once roughly every 512 ms.
+       DATA >FFFC        Decreases by 4 every 30 or so microseconds.
+MIDTIM DATA >FFFF        Decrements once roughly every 2 ms.
+*                        Holds the save value as the word at TIMER+1.
+*
+SCRLTM DATA >FFF0        When MIDTIM <= this value, scroll left or right
 WAITTM DATA 500          Amount of time to wait between scrolls (value of 1 ~= 2 ms)
 TIMTXT BSS  4            ASCII characters representing timer value
 
@@ -283,13 +285,13 @@ TRCKTM CLR  R12
        STCR R2,15       Read current value (plus mode bit)
        SBZ  0
        SRL  R2,1        Get rid of mode bit
-	   SLA  R2,2
-       C    R2,@TIMER2
+       SLA  R2,2
+       C    R2,@TIMER+2
        JL   TRCK1
        DEC  @TIMER
-TRCK1  MOV  R2,@TIMER2
+TRCK1  MOV  R2,@TIMER+2
        MOVB @TIMER+1,@MIDTIM
-	   MOVB @TIMER2,@MIDTIM+1
+       MOVB @TIMER+2,@MIDTIM+1
        RT
 
 *
