@@ -41,9 +41,11 @@ MAPWD  DATA 0            Width of current map
 MAPXT  DATA 0            Width of current map - >20 (screen width)
 
 * Timer stuff
-TIMER  DATA 0            A number that imgrements every 1/60 second
-SCRLTM DATA 5            When this value is <= TIMER, scroll left or right
-WAITTM DATA 7            Amount of time to wait between scrolls
+TIMER  DATA >FFFF        Decrements once roughly every 2 ms.
+TIMER2 DATA >FFFC        Decreases by 4 every several microseconds
+MIDTIM DATA >FFFF        Holds the middle two bytes of the four bytes in TIMER and TIMER2
+SCRLTM DATA >F000        When MIDTIM <= this value, scroll left or right
+WAITTM DATA 500          Amount of time to wait between scrolls (value of 1 ~= 2 ms)
 TIMTXT BSS  4            ASCII characters representing timer value
 
 EIGHT  BYTE 8
@@ -64,11 +66,12 @@ RUNTST
 * Wait to scroll horizontally
 WAITLP LIMI 2
        LIMI 0
-       MOV  @SCRLTM,R0
-       S    @TIMER,R0
+       BL   @TRCKTM
+       MOV  @MIDTIM,R0
+       S    @SCRLTM,R0
        JGT  WAITLP
 * Set next timer
-       A    @WAITTM,@SCRLTM
+       S    @WAITTM,@SCRLTM
 * Display timer
        MOV  @TIMER,R0
        LI   R1,TIMTXT
@@ -108,14 +111,22 @@ PATSTP BL   @DRWPAT
 *
 INTGAM
 * Define the interupt routine
-       LI   R0,TIMINT
-       MOV  R0,@USRISR
+*       LI   R0,TIMINT
+*       MOV  R0,@USRISR
 * Move Sprite Descriptor Table to >1000
        LI   R0,>0602
        BLWP @VWTR
 * Set background color
        LI   R0,>0701
        BLWP @VWTR
+* Initialize Timer
+       CLR  R12         CRU base of the TMS9901 
+       SBO  0           Enter timer mode 
+       LI   R1,>3FFF    Maximum value
+       INCT R12         Address of bit 1 
+       LDCR R1,14       Load value 
+       DECT R12         There is a faster way (see below) 
+       SBZ  0           Exit clock mode, start decrementer 
        RT
 
 *
@@ -265,6 +276,23 @@ INTPOS
        RT
 
 *
+* Track Time
+*
+TRCKTM CLR  R12 
+       SBO  0           Enter timer mode 
+       STCR R2,15       Read current value (plus mode bit)
+       SBZ  0
+       SRL  R2,1        Get rid of mode bit
+	   SLA  R2,2
+       C    R2,@TIMER2
+       JL   TRCK1
+       DEC  @TIMER
+TRCK1  MOV  R2,@TIMER2
+       MOVB @TIMER+1,@MIDTIM
+	   MOVB @TIMER2,@MIDTIM+1
+       RT
+
+*
 * Update scroll positions
 *
 SCROLL MOV  R5,R5
@@ -312,9 +340,7 @@ DRWMAP MOV  R11,@DRWRT
 * Store position in map in R9
        MOV  @SCRENB(10),R9
        A    R6,R9
-HSCRL  LIMI 2
-       LIMI 0
-       LI   R7,>20
+HSCRL  LI   R7,>20
 HSCRL1 MOVB *R9,R1
        AB   @MINSCL,R1
        MOVB R1,@VDPWD
@@ -352,8 +378,6 @@ DRWPAT MOV  R11,@DRWRT
 * Copy pixel-shifted character to pattern buffer
        MOV  R3,R0
        SWPB R0
-       LIMI 2
-       LIMI 0
 PSCRL  MOV  *R9+,R1
        MOV  R0,R0
        JEQ  PSCRL1
