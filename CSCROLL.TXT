@@ -42,7 +42,7 @@ MAPXT  DATA 0            Width of current map - >20 (screen width)
 * Timer stuff
 TIMER  DATA 0            A number that imgrements every 1/60 second
 SCRLTM DATA 5            When this value is <= TIMER, scroll left or right
-WAITTM DATA 2            Amount of time to wait between scrolls
+WAITTM DATA 7           Amount of time to wait between scrolls
 
 EIGHT  BYTE 8
 
@@ -67,13 +67,24 @@ WAITLP LIMI 2
        JGT  WAITLP
 * Set next timer
        A    @WAITTM,@SCRLTM
-* Scroll left or right
+* Update left or right scroll position
        BL   @SCROLL
-* Copy map to VDP with scrolling
-       LI   R0,>60
+* Store map address
        LI   R10,MP01HD
+* If scroll direction > 0 && pixel scroll amount > 1 skip drawing screen image table
+* If scroll direction < 0 && pixel scroll amount < 6 skip drawing screen image table
+       MOV  R5,R5
+       JLT  IFLBL1
+       CI   R3,>01FF
+       JH   PATSTP
+       JMP  MAPSTP
+IFLBL1 CI   R3,>0600
+       JL   PATSTP
+* Copy map to VDP with scrolling
+MAPSTP LI   R0,>60
        BL   @DRWMAP
-       BL   @DRWPAT
+* Copy patterns to VDP with scrolling
+PATSTP BL   @DRWPAT
        BL   @FLIPPG
 * Start over
        JMP  WAITLP
@@ -234,7 +245,7 @@ INTPOS
 * Store column scroll amount in R6
        CLR  R6
 * Store pixel scroll amount in R3 (left-most byte)
-       LI   R3,>0100
+       LI   R3,>FF00
 * Store scroll direction in R4 and R5
 * always either positive or negative 1.
        LI   R4,>0100
@@ -324,7 +335,7 @@ DRWPAT MOV  R11,@DRWRT
        LI   R9,PATBUF
 * Store end of pattern buffer in R8 (length of transition buffer * 8 + PATBUF )
        MOV  @TRANSG(10),R8
-       SLA  R8,4
+       SLA  R8,3
        A    R9,R8
 * Copy pixel-shifted character to pattern buffer
        MOV  R3,R0
