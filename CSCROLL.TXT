@@ -1,6 +1,7 @@
        DEF  RUNTST
        REF  VMBW,VWTR
        REF  VDPWA,VDPWD
+       REF  MAKETX
 *
        REF  MP01HD                     ; Map Header
 *
@@ -42,7 +43,8 @@ MAPXT  DATA 0            Width of current map - >20 (screen width)
 * Timer stuff
 TIMER  DATA 0            A number that imgrements every 1/60 second
 SCRLTM DATA 5            When this value is <= TIMER, scroll left or right
-WAITTM DATA 7           Amount of time to wait between scrolls
+WAITTM DATA 7            Amount of time to wait between scrolls
+TIMTXT BSS  4            ASCII characters representing timer value
 
 EIGHT  BYTE 8
 
@@ -67,6 +69,16 @@ WAITLP LIMI 2
        JGT  WAITLP
 * Set next timer
        A    @WAITTM,@SCRLTM
+* Display timer
+       MOV  @TIMER,R0
+       LI   R1,TIMTXT
+       BLWP @MAKETX
+       LI   R0,>001A+SCNPG1
+       LI   R1,TIMTXT
+       LI   R2,4
+       BLWP @VMBW
+       LI   R0,>001A+SCNPG2
+       BLWP @VMBW
 * Update left or right scroll position
        BL   @SCROLL
 * Store map address
