@@ -1,0 +1,88 @@
+       DEF  RUNTST
+       REF  VMBW
+       REF  MAKETX
+
+* A program to test shifting the screen left and right
+* This scroll method involves defining grops of 8 characters
+* Each character in the group is pixel-shifted by one
+* relative to the earlier character.
+*
+* Use this file together with HSCROLLDAT and FIXEDDAT
+
+* Addresses
+USRISR EQU  >83C4        Address defining address of interupt routine
+
+* Timer stuff
+TIMER  DATA 0            A number that imgrements every 1/60 second
+BIGTIM DATA >FFFF        Decrements once every 349.2 ms.
+       DATA >FFFC        Leftmost 14-bits decrement once every 21.3 microseconds.
+MIDTIM DATA >FFFF        Decrements once every 1.363 ms.
+TIMTXT BSS  4
+
+
+
+RUNTST
+* Initialize Game
+       BL   @INTGAM
+WAITLP LIMI 2
+       LIMI 0
+       BL   @TRCKTM
+* Display timer
+       MOV  @TIMER,R0
+       LI   R1,TIMTXT
+       BLWP @MAKETX
+       LI   R0,>016E
+       LI   R1,TIMTXT
+       LI   R2,4
+       BLWP @VMBW
+* Display timer
+       MOV  @BIGTIM,R0
+       LI   R1,TIMTXT
+       BLWP @MAKETX
+       LI   R0,>01AE
+       LI   R1,TIMTXT
+       LI   R2,4
+       BLWP @VMBW
+*
+       JMP  WAITLP
+
+
+
+*
+* Track Time
+*
+TRCKTM CLR  R12 
+       SBO  0           Enter timer mode 
+       STCR R2,15       Read current value (plus mode bit)
+       SBZ  0
+       SRL  R2,1        Get rid of mode bit
+       SLA  R2,2
+       C    R2,@BIGTIM+2
+       JL   TRCK1
+       DEC  @BIGTIM
+TRCK1  MOV  R2,@BIGTIM+2
+       MOVB @BIGTIM+1,@MIDTIM
+       MOVB @BIGTIM+2,@MIDTIM+1
+       RT
+
+*
+* Initialize game
+*
+INTGAM
+* Define the interupt routine
+       LI   R0,TIMINT
+       MOV  R0,@USRISR
+* Initialize Timer
+       CLR  R12         CRU base of the TMS9901 
+       SBO  0           Enter timer mode 
+       LI   R1,>3FFF    Maximum value
+       INCT R12         Address of bit 1 
+       LDCR R1,14       Load value 
+       DECT R12         There is a faster way (see below) 
+       SBZ  0           Exit clock mode, start decrementer 
+*
+       RT
+
+TIMINT INC  @TIMER
+       RT
+       END
