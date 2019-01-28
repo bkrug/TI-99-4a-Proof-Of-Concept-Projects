@@ -1,0 +1,182 @@
+       DEF  RUNTST
+       REF  VMBW,VWTR,VSBW
+       REF  VDPWA,VDPWD
+       REF  SPR0,SPREND,SPRLEN
+
+* A program to test shifting the screen left and right
+* This scroll method involves defining grops of 8 characters
+* Each character in the group is pixel-shifted by one
+* relative to the earlier character.
+*
+* Use this file together with HSCROLLDAT and FIXEDDAT
+
+* Addresses
+USRISR EQU  >83C4        Address defining address of interupt routine
+REG1CP EQU  >83D4        Address holding a copy of VDP Register 1
+*
+SPRTBL EQU  >1800        Address of Sprite Pattern Table
+CLRTBL EQU  >380         Address of Color Table
+PTNPG1 EQU  >800         Address of Character Pattern Table 1
+PTNPG2 EQU  >1000        Address of Character Pattern Table 2
+SCNPG1 EQU  >0           Address of Page 1 of the screen image table
+SCNPG2 EQU  >400         Address of Page 2 of the screen image table
+SPRPG1 EQU  >2000        Address of Page 1 of the sprite attribute list
+SPRPG2 EQU  >2080        Address of Page 2 of the sprite attribute list
+
+*
+* Data used for page flips
+*
+ADDRG2 DATA 1            Add this to Reg 2 to flip screen image page
+ADDRG4 EQU  ADDRG2       Add this to Reg 4 to flip the pattern page
+ADDRG5 EQU  ADDRG2       Add this to Reg 5 to flip sprite attribute page
+VDPRG1 DATA >01E2        Current value of VDP register 1
+VDPRG2 DATA >0200        Current value of VDP register 2
+VDPRG4 DATA >0401        Current value of VDP register 4
+VDPRG5 DATA >0540        Current value of VDP register 5
+VDPRG6 DATA >0603        Current value of VDP register 6
+VDPRG7 DATA >0701        Current value of VDP register 7
+
+* Timer stuff
+TIMER  DATA >FFFF        Decrements once every 349.2 ms.
+       DATA >FFFC        Leftmost 14-bits decrement once every 21.3 microseconds.
+MIDTIM DATA >FFFF        Decrements once every 1.363 ms.
+*                        Holds the same value as the word at TIMER+1.
+*
+FLIPTM DATA >FFF0        When MIDTIM <= this value, go to next animation frame
+WAITTM DATA 35           Amount of time to wait between frames
+
+SPRATT DATA >5070,>0002
+       DATA >6070,>0402
+       DATA >D000
+
+HEROMV BYTE >00,>04
+       BYTE >00,>04
+       BYTE >00,>04
+	   BYTE >08,>0C
+	   BYTE >08,>0C
+	   BYTE >10,>14
+	   BYTE >10,>14
+	   BYTE >10,>14
+	   BYTE >18,>1C
+	   BYTE >18,>1C
+HEROED
+
+HEROMX BYTE >18          Maximum hero character value
+HEROAD BYTE >08          Increase Hero character by this amount. (+8 or -8)
+       EVEN
+
+RUNTST
+* Initialize Game
+       BL   @INTGAM
+       BL   @INTSPR
+	   LI   R3,HEROMV
+* Wait to scroll horizontally
+WAITLP LIMI 2
+       LIMI 0
+       BL   @TRCKTM
+       MOV  @MIDTIM,R0
+       S    @FLIPTM,R0
+       JGT  WAITLP
+* Set next timer
+       S    @WAITTM,@FLIPTM
+* Move to next frame
+       MOVB *R3+,@SPRATT+2
+       MOVB *R3+,@SPRATT+6
+* Rewrite sprite attribute list
+       LI   R0,SPRPG1
+       LI   R1,SPRATT
+       LI   R2,9
+       BLWP @VMBW
+* Restart loop if necessary
+       CI   R3,HEROED
+       JL   WAITLP
+       LI   R3,HEROMV
+* Start over
+       JMP  WAITLP
+
+
+
+*
+* Initialize game
+*
+INTGAM
+       MOVB @VDPRG1+1,@REG1CP
+       MOV  @VDPRG1,R0
+       BLWP @VWTR
+       MOV  @VDPRG2,R0
+       BLWP @VWTR
+       MOV  @VDPRG4,R0
+       BLWP @VWTR
+       MOV  @VDPRG5,R0
+       BLWP @VWTR
+       MOV  @VDPRG6,R0
+       BLWP @VWTR
+       MOV  @VDPRG7,R0
+       BLWP @VWTR
+* Color table
+       LI   R0,CLRTBL+4
+	   LI   R1,>1000
+	   BLWP @VSBW
+* Initialize Timer
+       CLR  R12         CRU base of the TMS9901 
+       SBO  0           Enter timer mode 
+       LI   R1,>3FFF    Maximum value
+       INCT R12         Address of bit 1 
+       LDCR R1,14       Load value 
+       DECT R12         There is a faster way (see below) 
+       SBZ  0           Exit clock mode, start decrementer 
+       RT
+
+*
+* Initialize Sprite Patterns
+*
+INTSPR
+* Record sprite values
+       LI   R0,SPRTBL
+       LI   R1,SPR0
+       LI   R2,SPRLEN
+       BLWP @VMBW
+* Record initial sprite attributes
+       LI   R0,SPRPG1
+       LI   R1,SPRATT
+       LI   R2,9
+       BLWP @VMBW
+*
+       RT
+
+*
+* Track Time
+*
+TRCKTM CLR  R12 
+       SBO  0           Enter timer mode 
+       STCR R2,15       Read current value (plus mode bit)
+       SBZ  0
+       SRL  R2,1        Get rid of mode bit
+       SLA  R2,2
+       C    R2,@TIMER+2
+       JL   TRCK1
+       DEC  @TIMER
+TRCK1  MOV  R2,@TIMER+2
+       MOVB @TIMER+1,@MIDTIM
+       MOVB @TIMER+2,@MIDTIM+1
+       RT
+
+*
+* Flip Page
+*
+FLIPPG
+* Flip page for screen image table, pattern table, sprite attribute list
+       A    @ADDRG2,@VDPRG2
+       A    @ADDRG4,@VDPRG4
+       A    @ADDRG5,@VDPRG5
+       MOV  @VDPRG2,R0
+       BLWP @VWTR
+       MOV  @VDPRG4,R0
+       BLWP @VWTR
+       MOV  @VDPRG5,R0
+       BLWP @VWTR
+* Simultaneously negates ADDRG4 and ADDRG5
+       NEG  @ADDRG2
+       RT
+
+       END
