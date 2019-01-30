@@ -71,7 +71,9 @@ HEROAD BYTE >08          Increase Hero character by this amount. (+8 or -8)
 HERODR DATA 0            Specifies if hero is facing right
 HEROSL DATA 0            Specifies if hero is standing still
 
-RUNTST
+RUNTST 
+* Initialize Stack
+       LI   R10,STACKH
 * Initialize Game
        BL   @INTGAM
        BL   @INTSPR
@@ -154,7 +156,8 @@ TRCK1  MOV  R2,@TIMER+2
 *
 * Scan for user input
 *
-USRIPT MOV  R11,@USRRT
+USRIPT DECT R10
+       MOV  R11,*R10
 * Scan for left move
        LI   R2,>0100
        BL   @KYSCAN
@@ -175,9 +178,8 @@ MOVLFT SETO @HERODR
 * Note that the user is moving the hero right
 MOVRGT CLR  @HERODR
        SETO @HEROSL
-USRRTN MOV  @USRRT,R11
+USRRTN MOV  *R10+,R11
        RT
-USRRT  DATA >0000
 * Left keyboard row
 RWLEFT DATA >2000
 * Right keyboard row
@@ -198,7 +200,8 @@ KYSCAN LI   R12,>0024
 *
 * Redraw hero sprite
 *
-HEROSP
+HEROSP DECT R10
+       MOV  R11,*R10
 * Confirm enough time has passed
        MOV  @MIDTIM,R0
        S    @FLIPTM,R0
@@ -208,21 +211,28 @@ HEROSP
        JNE  MOVANI
 * Display sprite as standing still
        MOV  @HEROST,R1
-       MOV  @HERODR,R2
-       JEQ  STILL
-       AI   R1,>8080
-STILL  LI   R0,SPRPG1+2
-       BLWP @VSBW
-       SWPB R1
-       LI   R0,SPRPG1+6
-       BLWP @VSBW
+       BL   @HEROPK
+       MOV  *R10+,R11
        RT
 * Animate hero sprite as it moves
 MOVANI S    @WAITTM,@FLIPTM
 * Move to next frame
        MOV  @ANIADR,R5
        MOV  *R5+,R1
-       MOV  @HERODR,R2
+       BL   @HEROPK
+* Restart animation loop if necessary
+       CI   R5,HEROED
+       JL   HERORT
+       LI   R5,HEROMV
+* Store next set of characters for animation
+HERORT MOV  R5,@ANIADR
+       MOV  *R10+,R11
+       RT
+
+* Pass the new hero characters from R1 to VDP RAM
+* R1 is expected to have two characters, one in each byte.
+* If hero direction is "left", at >80 to each character code.
+HEROPK MOV  @HERODR,R2
        JEQ  MOVE1
        AI   R1,>8080
 MOVE1  LI   R0,SPRPG1+2
@@ -230,12 +240,6 @@ MOVE1  LI   R0,SPRPG1+2
        SWPB R1
        LI   R0,SPRPG1+6
        BLWP @VSBW
-* Restart animation loop if necessary
-       CI   R5,HEROED
-       JL   HERORT
-       LI   R5,HEROMV
-* Store next set of characters for animation
-HERORT MOV  R5,@ANIADR
        RT
 
 *
@@ -255,5 +259,8 @@ FLIPPG
 * Simultaneously negates ADDRG4 and ADDRG5
        NEG  @ADDRG2
        RT
+
+STACKL BSS  >100
+STACKH
 
        END
