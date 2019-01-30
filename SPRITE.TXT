@@ -75,14 +75,17 @@ RUNTST
        BL   @INTGAM
        BL   @INTSPR
        LI   R5,HEROMV
-	   LI   R6,HIST
 * Wait to scroll horizontally
 WAITLP BL   @TRCKTM
+* Process user input
        BL   @USRIPT
+* Check if this is the right time to draw the sprite
        MOV  @MIDTIM,R0
        S    @FLIPTM,R0
        JGT  WAITLP
-	   BL   @SPRCHR
+* Redraw hero sprite
+       BL   @SPRCHR
+*
        JMP  WAITLP
 
 
@@ -90,15 +93,15 @@ SPRCHR MOV  @HEROSL,R0
        JNE  MOVANI
 * Display sprite as standing still
        MOV  @HEROST,R1
-	   MOV  @HERODR,R2
-	   JEQ  STILL
-	   AI   R1,>8080
+       MOV  @HERODR,R2
+       JEQ  STILL
+       AI   R1,>8080
 STILL  LI   R0,SPRPG1+2
-	   BLWP @VSBW
-	   SWPB R1
-	   LI   R0,SPRPG1+6
-	   BLWP @VSBW
-	   RT
+       BLWP @VSBW
+       SWPB R1
+       LI   R0,SPRPG1+6
+       BLWP @VSBW
+       RT
 * Animate hero sprite as it moves
 MOVANI S    @WAITTM,@FLIPTM
 * Move to next frame
@@ -118,7 +121,7 @@ MOVE2  BLWP @VSBW
        CI   R5,HEROED
        JL   WAITLP
        LI   R5,HEROMV
-	   RT
+       RT
 
 
 *
@@ -208,24 +211,27 @@ FLIPPG
 * Scan for user input
 *
 USRIPT MOV  R11,@USRRT
+* Scan for left move
        LI   R2,>0100
        BL   @KYSCAN
        CZC  @RWLEFT,R3
        JEQ  MOVLFT
+* Scan for right move
        LI   R2,>0200
        BL   @KYSCAN
        CZC  @RWRGHT,R3
        JEQ  MOVRGT
+* Note that the user isn't moving the hero
        CLR  @HEROSL
-       MOV  @USRRT,R11
-       RT
+       JMP  USRRTN
+* Note that the user is moving the hero left
 MOVLFT SETO @HERODR
        SETO @HEROSL
-       MOV  @USRRT,R11
-       RT
+       JMP  USRRTN
+* Note that the user is moving the hero right
 MOVRGT CLR  @HERODR
        SETO @HEROSL
-       MOV  @USRRT,R11
+USRRTN MOV  @USRRT,R11
        RT
 USRRT  DATA >0000
 * Left keyboard row
@@ -244,7 +250,5 @@ KYSCAN LI   R12,>0024
        CLR  R3
        STCR R3,8
        RT
-
-HIST   BSS  >2000
 
        END
