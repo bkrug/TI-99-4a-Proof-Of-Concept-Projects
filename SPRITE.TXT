@@ -49,51 +49,76 @@ SPRATT DATA >5070,>0002
        DATA >6070,>0402
        DATA >D000
 
+* Codes for character moving right.
 HEROMV BYTE >00,>04
        BYTE >00,>04
        BYTE >00,>04
-	   BYTE >08,>0C
-	   BYTE >08,>0C
-	   BYTE >10,>14
-	   BYTE >10,>14
-	   BYTE >10,>14
-	   BYTE >18,>1C
-	   BYTE >18,>1C
+       BYTE >08,>0C
+       BYTE >08,>0C
+       BYTE >10,>14
+       BYTE >10,>14
+       BYTE >10,>14
+       BYTE >18,>1C
+       BYTE >18,>1C
 HEROED
+* Codes for character standing still looking right.
+HEROST BYTE >20,>24
 
 HEROMX BYTE >18          Maximum hero character value
 HEROAD BYTE >08          Increase Hero character by this amount. (+8 or -8)
        EVEN
+HERODR DATA 0            Specifies if hero is facing right
+HEROSL DATA 0            Specifies if hero is standing still
 
 RUNTST
 * Initialize Game
        BL   @INTGAM
        BL   @INTSPR
-	   LI   R3,HEROMV
+       LI   R5,HEROMV
+	   LI   R6,HIST
 * Wait to scroll horizontally
-WAITLP LIMI 2
-       LIMI 0
-       BL   @TRCKTM
+WAITLP BL   @TRCKTM
+       BL   @USRIPT
        MOV  @MIDTIM,R0
        S    @FLIPTM,R0
        JGT  WAITLP
-* Set next timer
-       S    @WAITTM,@FLIPTM
-* Move to next frame
-       MOVB *R3+,@SPRATT+2
-       MOVB *R3+,@SPRATT+6
-* Rewrite sprite attribute list
-       LI   R0,SPRPG1
-       LI   R1,SPRATT
-       LI   R2,9
-       BLWP @VMBW
-* Restart loop if necessary
-       CI   R3,HEROED
-       JL   WAITLP
-       LI   R3,HEROMV
-* Start over
+	   BL   @SPRCHR
        JMP  WAITLP
 
+
+SPRCHR MOV  @HEROSL,R0
+       JNE  MOVANI
+* Display sprite as standing still
+       MOV  @HEROST,R1
+	   MOV  @HERODR,R2
+	   JEQ  STILL
+	   AI   R1,>8080
+STILL  LI   R0,SPRPG1+2
+	   BLWP @VSBW
+	   SWPB R1
+	   LI   R0,SPRPG1+6
+	   BLWP @VSBW
+	   RT
+* Animate hero sprite as it moves
+MOVANI S    @WAITTM,@FLIPTM
+* Move to next frame
+       LI   R0,SPRPG1+2
+       MOVB *R5+,R1
+       MOV  @HERODR,R2
+       JEQ  MOVE1
+       AI   R1,>8000
+MOVE1  BLWP @VSBW
+       LI   R0,SPRPG1+6
+       MOVB *R5+,R1
+       MOV  @HERODR,R2
+       JEQ  MOVE2
+       AI   R1,>8000
+MOVE2  BLWP @VSBW
+* Restart loop if necessary
+       CI   R5,HEROED
+       JL   WAITLP
+       LI   R5,HEROMV
+	   RT
 
 
 *
@@ -115,8 +140,8 @@ INTGAM
        BLWP @VWTR
 * Color table
        LI   R0,CLRTBL+4
-	   LI   R1,>1000
-	   BLWP @VSBW
+       LI   R1,>1000
+       BLWP @VSBW
 * Initialize Timer
        CLR  R12         CRU base of the TMS9901 
        SBO  0           Enter timer mode 
@@ -178,5 +203,48 @@ FLIPPG
 * Simultaneously negates ADDRG4 and ADDRG5
        NEG  @ADDRG2
        RT
+
+*
+* Scan for user input
+*
+USRIPT MOV  R11,@USRRT
+       LI   R2,>0100
+       BL   @KYSCAN
+       CZC  @RWLEFT,R3
+       JEQ  MOVLFT
+       LI   R2,>0200
+       BL   @KYSCAN
+       CZC  @RWRGHT,R3
+       JEQ  MOVRGT
+       CLR  @HEROSL
+       MOV  @USRRT,R11
+       RT
+MOVLFT SETO @HERODR
+       SETO @HEROSL
+       MOV  @USRRT,R11
+       RT
+MOVRGT CLR  @HERODR
+       SETO @HEROSL
+       MOV  @USRRT,R11
+       RT
+USRRT  DATA >0000
+* Left keyboard row
+RWLEFT DATA >2000
+* Right keyboard row
+RWRGHT EQU  RWLEFT
+
+* Scan
+* R2 - keyboard column to scan (left-most byte)
+*
+* Select column to scan
+KYSCAN LI   R12,>0024
+       LDCR R2,3
+* Put scaned keyboard rows in R3 (left-most byte)
+       LI   R12,>0006
+       CLR  R3
+       STCR R3,8
+       RT
+
+HIST   BSS  >2000
 
        END
