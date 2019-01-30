@@ -48,6 +48,7 @@ WAITTM DATA 35           Amount of time to wait between frames
 SPRATT DATA >5070,>0002
        DATA >6070,>0402
        DATA >D000
+ANIADR DATA HEROMV       Address of the next pair of hero characters to display in animation
 
 * Codes for character moving right.
 HEROMV BYTE >00,>04
@@ -74,54 +75,15 @@ RUNTST
 * Initialize Game
        BL   @INTGAM
        BL   @INTSPR
-       LI   R5,HEROMV
-* Wait to scroll horizontally
-WAITLP BL   @TRCKTM
+GAMELP 
+* Update timer
+       BL   @TRCKTM
 * Process user input
        BL   @USRIPT
-* Check if this is the right time to draw the sprite
-       MOV  @MIDTIM,R0
-       S    @FLIPTM,R0
-       JGT  WAITLP
 * Redraw hero sprite
-       BL   @SPRCHR
+       BL   @HEROSP
 *
-       JMP  WAITLP
-
-
-SPRCHR MOV  @HEROSL,R0
-       JNE  MOVANI
-* Display sprite as standing still
-       MOV  @HEROST,R1
-       MOV  @HERODR,R2
-       JEQ  STILL
-       AI   R1,>8080
-STILL  LI   R0,SPRPG1+2
-       BLWP @VSBW
-       SWPB R1
-       LI   R0,SPRPG1+6
-       BLWP @VSBW
-       RT
-* Animate hero sprite as it moves
-MOVANI S    @WAITTM,@FLIPTM
-* Move to next frame
-       LI   R0,SPRPG1+2
-       MOVB *R5+,R1
-       MOV  @HERODR,R2
-       JEQ  MOVE1
-       AI   R1,>8000
-MOVE1  BLWP @VSBW
-       LI   R0,SPRPG1+6
-       MOVB *R5+,R1
-       MOV  @HERODR,R2
-       JEQ  MOVE2
-       AI   R1,>8000
-MOVE2  BLWP @VSBW
-* Restart loop if necessary
-       CI   R5,HEROED
-       JL   WAITLP
-       LI   R5,HEROMV
-       RT
+       JMP  GAMELP
 
 
 *
@@ -190,24 +152,6 @@ TRCK1  MOV  R2,@TIMER+2
        RT
 
 *
-* Flip Page
-*
-FLIPPG
-* Flip page for screen image table, pattern table, sprite attribute list
-       A    @ADDRG2,@VDPRG2
-       A    @ADDRG4,@VDPRG4
-       A    @ADDRG5,@VDPRG5
-       MOV  @VDPRG2,R0
-       BLWP @VWTR
-       MOV  @VDPRG4,R0
-       BLWP @VWTR
-       MOV  @VDPRG5,R0
-       BLWP @VWTR
-* Simultaneously negates ADDRG4 and ADDRG5
-       NEG  @ADDRG2
-       RT
-
-*
 * Scan for user input
 *
 USRIPT MOV  R11,@USRRT
@@ -249,6 +193,67 @@ KYSCAN LI   R12,>0024
        LI   R12,>0006
        CLR  R3
        STCR R3,8
+       RT
+
+*
+* Redraw hero sprite
+*
+HEROSP
+* Confirm enough time has passed
+       MOV  @MIDTIM,R0
+       S    @FLIPTM,R0
+       JGT  HERORT
+* Redraw hero sprite, either moving or standing still
+       MOV  @HEROSL,R0
+       JNE  MOVANI
+* Display sprite as standing still
+       MOV  @HEROST,R1
+       MOV  @HERODR,R2
+       JEQ  STILL
+       AI   R1,>8080
+STILL  LI   R0,SPRPG1+2
+       BLWP @VSBW
+       SWPB R1
+       LI   R0,SPRPG1+6
+       BLWP @VSBW
+       RT
+* Animate hero sprite as it moves
+MOVANI S    @WAITTM,@FLIPTM
+* Move to next frame
+       MOV  @ANIADR,R5
+       MOV  *R5+,R1
+       MOV  @HERODR,R2
+       JEQ  MOVE1
+       AI   R1,>8080
+MOVE1  LI   R0,SPRPG1+2
+       BLWP @VSBW
+       SWPB R1
+       LI   R0,SPRPG1+6
+       BLWP @VSBW
+* Restart animation loop if necessary
+       CI   R5,HEROED
+       JL   HERORT
+       LI   R5,HEROMV
+* Store next set of characters for animation
+HERORT MOV  R5,@ANIADR
+       RT
+
+*
+* Flip Page
+*
+FLIPPG
+* Flip page for screen image table, pattern table, sprite attribute list
+       A    @ADDRG2,@VDPRG2
+       A    @ADDRG4,@VDPRG4
+       A    @ADDRG5,@VDPRG5
+       MOV  @VDPRG2,R0
+       BLWP @VWTR
+       MOV  @VDPRG4,R0
+       BLWP @VWTR
+       MOV  @VDPRG5,R0
+       BLWP @VWTR
+* Simultaneously negates ADDRG4 and ADDRG5
+       NEG  @ADDRG2
        RT
 
        END
