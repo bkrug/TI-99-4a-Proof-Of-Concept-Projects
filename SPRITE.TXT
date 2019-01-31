@@ -1,6 +1,5 @@
        DEF  RUNTST
-       REF  VMBW,VWTR,VSBW
-       REF  VDPWA,VDPWD
+       REF  VMBW,VWTR
        REF  SPR0,SPREND,SPRLEN
 
 * A program to test shifting the screen left and right
@@ -13,6 +12,10 @@
 * Addresses
 USRISR EQU  >83C4        Address defining address of interupt routine
 REG1CP EQU  >83D4        Address holding a copy of VDP Register 1
+VDPWA  EQU  >8C02        VDP RAM write address
+VDPRD  EQU  >8800        VDP RAM read data
+VDPWD  EQU  >8C00        VDP RAM write data
+VDPSTA EQU  >8802        VDP RAM status
 *
 SPRTBL EQU  >1800        Address of Sprite Pattern Table
 CLRTBL EQU  >380         Address of Color Table
@@ -91,7 +94,9 @@ GAMELP
 *
 * Initialize game
 *
-INTGAM
+INTGAM DECT R10
+       MOV  R11,*R10
+*
        MOVB @VDPRG1+1,@REG1CP
        MOV  @VDPRG1,R0
        BLWP @VWTR
@@ -108,15 +113,17 @@ INTGAM
 * Color table
        LI   R0,CLRTBL+4
        LI   R1,>1000
-       BLWP @VSBW
+       BL   @VSBW
 * Initialize Timer
        CLR  R12         CRU base of the TMS9901 
        SBO  0           Enter timer mode 
        LI   R1,>3FFF    Maximum value
        INCT R12         Address of bit 1 
        LDCR R1,14       Load value 
-       DECT R12         There is a faster way (see below) 
+       DECT R12
        SBZ  0           Exit clock mode, start decrementer 
+*
+       MOV  *R10+,R11
        RT
 
 *
@@ -232,14 +239,19 @@ HERORT MOV  R5,@ANIADR
 * Pass the new hero characters from R1 to VDP RAM
 * R1 is expected to have two characters, one in each byte.
 * If hero direction is "left", at >80 to each character code.
-HEROPK MOV  @HERODR,R2
+HEROPK DECT R10
+       MOV  R11,*R10
+*
+       MOV  @HERODR,R2
        JEQ  MOVE1
        AI   R1,>8080
 MOVE1  LI   R0,SPRPG1+2
-       BLWP @VSBW
+       BL   @VSBW
        SWPB R1
        LI   R0,SPRPG1+6
-       BLWP @VSBW
+       BL   @VSBW
+*
+       MOV  *R10+,R11
        RT
 
 *
@@ -262,5 +274,19 @@ FLIPPG
 
 STACKL BSS  >100
 STACKH
+
+VDPWRT DATA >4000
+VSBW
+* Specify VDP address (write least-signficant byte first)
+       SWPB R0
+       MOVB R0,@VDPWA
+       SWPB R0
+	   SOC  @VDPWRT,R0                 Set second most signfication bit for writing
+	   MOVB R0,@VDPWA
+* Specify data to write
+       NOP
+	   MOVB R1,@VDPWD
+*
+	   RT
 
        END
