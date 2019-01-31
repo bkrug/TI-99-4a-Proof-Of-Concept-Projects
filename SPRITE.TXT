@@ -8,14 +8,14 @@
 *
 * Use this file together with HSCROLLDAT and FIXEDDAT
 
-* Addresses
+* CPU RAM Addresses
 USRISR EQU  >83C4        Address defining address of interupt routine
 REG1CP EQU  >83D4        Address holding a copy of VDP Register 1
 VDPWA  EQU  >8C02        VDP RAM write address
 VDPRD  EQU  >8800        VDP RAM read data
 VDPWD  EQU  >8C00        VDP RAM write data
 VDPSTA EQU  >8802        VDP RAM status
-*
+* VDP RAM Addresses
 SPRTBL EQU  >1800        Address of Sprite Pattern Table
 CLRTBL EQU  >380         Address of Color Table
 PTNPG1 EQU  >800         Address of Character Pattern Table 1
@@ -24,6 +24,14 @@ SCNPG1 EQU  >0           Address of Page 1 of the screen image table
 SCNPG2 EQU  >400         Address of Page 2 of the screen image table
 SPRPG1 EQU  >2000        Address of Page 1 of the sprite attribute list
 SPRPG2 EQU  >2080        Address of Page 2 of the sprite attribute list
+
+*
+* Editable values
+*
+       AORG >8300
+
+LOCLWS BSS  >20          Local Workspace
+       BSS  >8           8 Bytes that get overwritten for reasons I don't understand
 
 *
 * Data used for page flips
@@ -43,14 +51,27 @@ TIMER  DATA >FFFF        Decrements once every 349.2 ms.
        DATA >FFFC        Leftmost 14-bits decrement once every 21.3 microseconds.
 MIDTIM DATA >FFFF        Decrements once every 1.363 ms.
 *                        Holds the same value as the word at TIMER+1.
-*
-FLIPTM DATA >FFF0        When MIDTIM <= this value, go to next animation frame
-WAITTM DATA 35           Amount of time to wait between frames
 
+FLIPTM DATA >FFF0        When MIDTIM <= this value, go to next animation frame
+ANIADR DATA HEROMV       Address of the next pair of hero characters to display in animation
+HERODR DATA 0            Specifies if hero is facing right
+HEROSL DATA 0            Specifies if hero is standing still
+
+       AORG >83F0
+STACKL BSS  >10
+STACKH
+
+       RORG
+*
+* End of Editable values
+*
+
+WAITTM DATA 35           Amount of time to wait between hero animation frames
+
+* Initial contents of sprite attribute table
 SPRATT DATA >5070,>0002
        DATA >6070,>0402
        DATA >D000
-ANIADR DATA HEROMV       Address of the next pair of hero characters to display in animation
 
 * Codes for character moving right.
 HEROMV BYTE >00,>04
@@ -66,14 +87,9 @@ HEROMV BYTE >00,>04
 HEROED
 * Codes for character standing still looking right.
 HEROST BYTE >20,>24
-
-HEROMX BYTE >18          Maximum hero character value
-HEROAD BYTE >08          Increase Hero character by this amount. (+8 or -8)
        EVEN
-HERODR DATA 0            Specifies if hero is facing right
-HEROSL DATA 0            Specifies if hero is standing still
 
-RUNTST 
+RUNTST LWPI LOCLWS
 * Initialize Stack
        LI   R10,STACKH
 * Initialize Game
@@ -273,8 +289,9 @@ FLIPPG
        NEG  @ADDRG2
        RT
 
-STACKL BSS  >100
-STACKH
+*
+* VDP RAM access
+*
 
 BIT0   DATA >8000
 BIT1   DATA >4000
