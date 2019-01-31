@@ -1,5 +1,5 @@
        DEF  RUNTST
-       REF  VMBW,VWTR
+       REF  VMBW
        REF  SPR0,SPREND,SPRLEN
 
 * A program to test shifting the screen left and right
@@ -99,17 +99,17 @@ INTGAM DECT R10
 *
        MOVB @VDPRG1+1,@REG1CP
        MOV  @VDPRG1,R0
-       BLWP @VWTR
+       BL   @VWTR
        MOV  @VDPRG2,R0
-       BLWP @VWTR
+       BL   @VWTR
        MOV  @VDPRG4,R0
-       BLWP @VWTR
+       BL   @VWTR
        MOV  @VDPRG5,R0
-       BLWP @VWTR
+       BL   @VWTR
        MOV  @VDPRG6,R0
-       BLWP @VWTR
+       BL   @VWTR
        MOV  @VDPRG7,R0
-       BLWP @VWTR
+       BL   @VWTR
 * Color table
        LI   R0,CLRTBL+4
        LI   R1,>1000
@@ -263,11 +263,11 @@ FLIPPG
        A    @ADDRG4,@VDPRG4
        A    @ADDRG5,@VDPRG5
        MOV  @VDPRG2,R0
-       BLWP @VWTR
+       BL   @VWTR
        MOV  @VDPRG4,R0
-       BLWP @VWTR
+       BL   @VWTR
        MOV  @VDPRG5,R0
-       BLWP @VWTR
+       BL   @VWTR
 * Simultaneously negates ADDRG4 and ADDRG5
        NEG  @ADDRG2
        RT
@@ -275,18 +275,35 @@ FLIPPG
 STACKL BSS  >100
 STACKH
 
-VDPWRT DATA >4000
+BIT0   DATA >8000
+BIT1   DATA >4000
 VSBW
+* Specify that we wish to write to the VDP RAM
+       SZC  @BIT0,R0                  Set most signfication bit for writing
+       SOC  @BIT1,R0                  Set second most signfication bit for writing
 * Specify VDP address (write least-signficant byte first)
        SWPB R0
        MOVB R0,@VDPWA
        SWPB R0
-	   SOC  @VDPWRT,R0                 Set second most signfication bit for writing
-	   MOVB R0,@VDPWA
+       MOVB R0,@VDPWA
 * Specify data to write
        NOP
-	   MOVB R1,@VDPWD
+       MOVB R1,@VDPWD
 *
-	   RT
+       RT
 
+VWTR   DECT R10
+       MOV  R0,*R10
+* Specify that we are changing a registers
+       SOC  @BIT0,R0
+       SZC  @BIT1,R0
+* Write new value to VDP register
+       SWPB R0
+       MOVB R0,@VDPWA
+* Specify VDP register to change
+       SWPB R0
+       MOVB R0,@VDPWA
+*
+       MOV  *R10+,R0
+       RT
        END
