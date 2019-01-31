@@ -1,5 +1,4 @@
        DEF  RUNTST
-       REF  VMBW
        REF  SPR0,SPREND,SPRLEN
 
 * A program to test shifting the screen left and right
@@ -129,18 +128,20 @@ INTGAM DECT R10
 *
 * Initialize Sprite Patterns
 *
-INTSPR
+INTSPR DECT R10
+       MOV  R11,*R10
 * Record sprite values
        LI   R0,SPRTBL
        LI   R1,SPR0
        LI   R2,SPRLEN
-       BLWP @VMBW
+       BL   @VMBW
 * Record initial sprite attributes
        LI   R0,SPRPG1
        LI   R1,SPRATT
        LI   R2,9
-       BLWP @VMBW
+       BL   @VMBW
 *
+       MOV  *R10+,R11
        RT
 
 *
@@ -277,7 +278,8 @@ STACKH
 
 BIT0   DATA >8000
 BIT1   DATA >4000
-VSBW
+VSBW   DECT R10
+       MOV  R0,*R10
 * Specify that we wish to write to the VDP RAM
        SZC  @BIT0,R0                  Set most signfication bit for writing
        SOC  @BIT1,R0                  Set second most signfication bit for writing
@@ -290,6 +292,29 @@ VSBW
        NOP
        MOVB R1,@VDPWD
 *
+       MOV  *R10+,R0
+       RT
+
+VMBW   DECT R10
+       MOV  R0,*R10
+       DECT R10
+       MOV  R2,*R10
+* Specify that we wish to write to the VDP RAM
+       SZC  @BIT0,R0                  Set most signfication bit for writing
+       SOC  @BIT1,R0                  Set second most signfication bit for writing
+* Specify VDP address (write least-signficant byte first)
+       SWPB R0
+       MOVB R0,@VDPWA
+       SWPB R0
+       MOVB R0,@VDPWA
+* Specify data to write
+       NOP
+VMBW1  MOVB *R1+,@VDPWD
+       DEC  R2
+       JNE  VMBW1
+*
+       MOV  *R10+,R2
+       MOV  *R10+,R0
        RT
 
 VWTR   DECT R10
