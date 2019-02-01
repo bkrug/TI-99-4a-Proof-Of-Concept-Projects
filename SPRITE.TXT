@@ -32,7 +32,7 @@ KEYTM  DATA >FFFF        When MIDTIM <= this value, it is okay to accept a key p
 ANIADR DATA HEROMV       Address of the next pair of hero characters to display in animation
 HERODR DATA 0            If 0, hero is facing right
 HEROSL DATA 0            If 0, hero is standing still
-HEROX  BYTE >70          Current x position of hero
+HEROX  DATA >70          Current x position of hero
        EVEN
 
        AORG >83F0
@@ -70,7 +70,7 @@ VDPR5B DATA >050F        Secndry value of VDP register 5 (page 2 of sprite attri
 VDPR6  DATA >0603        Initial value of VDP register 6 (Sprite Descriptor Table)
 VDPR7  DATA >0701        Initial value of VDP register 7 (background color)
 
-WAITTM DATA 20           Amount of time to wait between hero animation frames
+HEROWT DATA 20           Amount of time to wait between hero animation frames
 KEYWT  DATA 8            Amount of time to wait between accepting key presses
 
 * Initial contents of sprite attribute table
@@ -221,12 +221,12 @@ USRIPT DECT R10
 * Note that the user is moving the hero left
 MOVLFT SETO @HERODR
        SETO @HEROSL
-       AB   @BYTEFF,@HEROX
+       DEC  @HEROX
        JMP  KEYNXT
 * Note that the user is moving the hero right
 MOVRGT CLR  @HERODR
        SETO @HEROSL
-       AB   @BYTE01,@HEROX
+       INC  @HEROX
 * Specify time to wait before accepting another key press
 KEYNXT MOV  @MIDTIM,@KEYTM
        S    @KEYWT,@KEYTM
@@ -260,7 +260,7 @@ HEROSP DECT R10
        S    @FLIPTM,R0
        JGT  HEROR2
 * Set next wait time
-       S    @WAITTM,@FLIPTM
+       S    @HEROWT,@FLIPTM
 * Redraw hero sprite, either moving or standing still
        MOV  @HEROSL,R0
        JNE  MOVANI
@@ -298,7 +298,8 @@ HEROVD DECT R10
        JLT  PK2
        LI   R0,SPRPG2+1
 * Respecify hero location
-PK2    MOVB @HEROX,R1
+PK2    MOV  @HEROX,R1
+       SWPB R1
        BL   @VSBW
        AI   R0,4
        BL   @VSBW
