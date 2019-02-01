@@ -1,5 +1,6 @@
        DEF  RUNTST
        REF  SPR0,SPREND,SPRLEN
+       REF  MP01HD
 
 * A program to test shifting the screen left and right
 * This scroll method involves defining grops of 8 characters
@@ -14,7 +15,9 @@
        AORG >8300
 
 LOCLWS BSS  >20          Local Workspace
-       BSS  >8           8 Bytes that get overwritten for reasons I don't understand
+* 8 Bytes that get overwritten between loading and running the program
+* you can still use this space if you wait until the program is running to initialize it.
+       DATA >F1F2,>F3F4,>F5F6,>F7F8
 
 *
 * Data used for page flips
@@ -33,6 +36,14 @@ ANIADR DATA HEROMV       Address of the next pair of hero characters to display 
 HERODR DATA 0            If 0, hero is facing right
 HEROSL DATA 0            If 0, hero is standing still
 HEROX  DATA >70          Current x position of hero
+*
+MAPWD  DATA 0            Width of current map
+MAPXT  DATA 0            Width of current map - >20 (screen width)
+* Used to create shifted version of characters
+PATBUF BSS  64
+PATEND
+*
+MINSCL BYTE 0            Minimum scrollable character
        EVEN
 
        AORG >83F0
@@ -58,7 +69,7 @@ CLRTBL EQU  >380         Address of Color Table
 SPRPG1 EQU  >700         Address of Page 1 of the sprite attribute list
 SPRPG2 EQU  >780         Address of Page 2 of the sprite attribute list
 PTNPG1 EQU  >800         Address of Character Pattern Table 1
-PTNPG2 EQU  >1000        Address of Character Pattern Table 2
+*PTNPG2 EQU  >1000        Address of Character Pattern Table 2
 SPRTBL EQU  >1800        Address of Sprite Pattern Table
 
 VDPR1  DATA >01E2        Initial value of VDP register 1 (Set sprite type)
@@ -74,8 +85,8 @@ HEROWT DATA 20           Amount of time to wait between hero animation frames
 KEYWT  DATA 8            Amount of time to wait between accepting key presses
 
 * Initial contents of sprite attribute table
-SPRATT DATA >5070,>0002
-       DATA >6070,>0402
+SPRATT DATA >A070,>0002
+       DATA >B070,>0402
        DATA >D000
 
 * Codes for character moving right.
@@ -103,11 +114,19 @@ RUNTST LWPI LOCLWS
 * Initialize Game
        BL   @INTGAM
        BL   @INTSPR
+       LI   R9,MP01HD
+       BL   @INTMAP
 GAMELP 
 * Update timer
        BL   @TRCKTM
 * Process user input
        BL   @USRIPT
+*
+       LI   R0,>60
+       LI   R2,MP01HD
+       LI   R3,>500               * R3 - Pixel Scroll Amount
+       LI   R6,4                  * R6 - Column Scroll Amount
+       BL   @DRWMAP
 * Redraw hero sprite
        BL   @HEROSP
 *
@@ -173,6 +192,82 @@ INTSPR DECT R10
        BL   @VMBW
        LI   R0,SPRPG2
        BL   @VMBW
+*
+       MOV  *R10+,R11
+       RT
+
+*
+* Initialize Map
+*
+* R9 - Address of map header
+MAPCOL EQU  0
+MAPROW EQU  2
+MAPSIZ EQU  4
+COLORB EQU  6
+COLORD EQU  8
+COLORG EQU  10
+PATRNB EQU  12
+PATRND EQU  14
+PATRNG EQU  16
+SCRENB EQU  18
+SCREND EQU  20
+SCRENG EQU  22
+INTMAP DECT R10
+       MOV  R11,*R10
+* Record map width values
+       MOV  *R9,R0
+       MOV  R0,@MAPWD
+       AI   R0,-32
+       MOV  R0,@MAPXT
+* Record minimum scrollable character
+       MOV  @PATRNB(9),R0
+       MOV  *R0,R0
+       SWPB R0
+       MOVB R0,@MINSCL
+* Write color definitions
+       SRL  R0,11                  Find value of minimum scrollable character / 8
+       AI   R0,CLRTBL
+       MOV  @COLORB(9),R1         * >A8C0
+       MOV  @COLORG(9),R2         * >14
+       BL   @VMBW
+* Write character patterns from >60
+* We are copying portions of 16-pixel characters
+* to 8-pixel characters
+* R3 - VDP address
+* R4 - address of leftmost 8 pixels
+* R5 - address of rightmost 8 pixels
+* R7 - 16 pixels
+* R8 - address of end of pattern data
+       MOVB @MINSCL,R3
+       SWPB R3
+       SLA  R3,3
+       AI   R3,PTNPG1              R3 = first char code * 8 + pattern table address
+       MOV  @PATRNB(9),R4
+       AI   R4,2
+       MOV  @PATRNB(9),R5
+       AI   R5,10
+       MOV  @PATRND(9),R8
+CHAR0  LI   R6,PATBUF
+CHAR1  MOVB *R5+,R7
+       SWPB R7
+       MOVB *R4+,R7
+CHAR2  MOVB R7,*R6
+       SLA  R7,1
+       AI   R6,8
+       CI   R6,PATEND
+       JL   CHAR2
+       AI   R6,PATBUF-PATEND+1
+       CI   R6,PATBUF+8
+       JL   CHAR1
+       MOV  R3,R0
+       LI   R1,PATBUF
+       LI   R2,PATEND-PATBUF
+       BL   @VMBW
+       AI   R3,8*8
+       AI   R4,8
+       AI   R5,8
+       C    R4,R8
+       JL   CHAR0
 *
        MOV  *R10+,R11
        RT
@@ -248,6 +343,52 @@ KYSCAN LI   R12,>0024
        LI   R12,>0006
        CLR  R3
        STCR R3,8
+       RT
+
+*
+* Draw the scrollable map
+*
+* R0 - Screen location to write to
+* R2 - Address of map header
+* R3 - Pixel Scroll Amount (left-most column)
+* R6 - Column Scroll Amount
+DRWMAP DECT R10
+       MOV  R11,*R10
+       BL   @INTCHR
+* Store end of map in R8
+       MOV  @SCREND(2),R8
+* Store position of map in R9
+       MOV  @SCRENB(2),R9
+       A    R6,R9
+HSCRL  LI   R7,>20
+HSCRL1 MOVB *R9,R1
+       CB   R1,@MINSCL
+       JL   HSCRL2
+       AB   R3,R1
+HSCRL2 MOVB R1,@VDPWD
+       INC  R9
+       DEC  R7
+       JNE  HSCRL1
+*
+       A    @MAPXT,R9                Increase R9 to equal address of next row
+       C    R9,R8
+       JL   HSCRL
+*
+       MOV  *R10+,R11
+       RT
+DRWRT  DATA 0
+
+*
+* Specify the initial screen position to write to.
+*
+INTCHR MOV  @NEXTPG,@NEXTPG
+       JLT  ITCHR0
+       AI   R0,SCNPG2
+ITCHR0 ORI  R0,>4000               Set write bit to true
+       SWPB R0
+       MOVB R0,@VDPWA
+       SWPB R0
+       MOVB R0,@VDPWA
        RT
 
 *
