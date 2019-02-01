@@ -8,23 +8,6 @@
 *
 * Use this file together with HSCROLLDAT and FIXEDDAT
 
-* CPU RAM Addresses
-USRISR EQU  >83C4        Address defining address of interupt routine
-REG1CP EQU  >83D4        Address holding a copy of VDP Register 1
-VDPWA  EQU  >8C02        VDP RAM write address
-VDPRD  EQU  >8800        VDP RAM read data
-VDPWD  EQU  >8C00        VDP RAM write data
-VDPSTA EQU  >8802        VDP RAM status
-* VDP RAM Addresses
-SPRTBL EQU  >1800        Address of Sprite Pattern Table
-CLRTBL EQU  >380         Address of Color Table
-PTNPG1 EQU  >800         Address of Character Pattern Table 1
-PTNPG2 EQU  >1000        Address of Character Pattern Table 2
-SCNPG1 EQU  >0           Address of Page 1 of the screen image table
-SCNPG2 EQU  >400         Address of Page 2 of the screen image table
-SPRPG1 EQU  >2000        Address of Page 1 of the sprite attribute list
-SPRPG2 EQU  >2080        Address of Page 2 of the sprite attribute list
-
 *
 * Editable values
 *
@@ -61,17 +44,34 @@ STACKH
 * End of Editable values
 *
 
-VDPR1  DATA >01E2        Initial value of VDP register 1
+* CPU RAM Addresses
+USRISR EQU  >83C4        Address defining address of interupt routine
+REG1CP EQU  >83D4        Address holding a copy of VDP Register 1
+VDPWA  EQU  >8C02        VDP RAM write address
+VDPRD  EQU  >8800        VDP RAM read data
+VDPWD  EQU  >8C00        VDP RAM write data
+VDPSTA EQU  >8802        VDP RAM status
+* VDP RAM Addresses
+SCNPG1 EQU  >0           Address of Page 1 of the screen image table
+SCNPG2 EQU  >400         Address of Page 2 of the screen image table
+CLRTBL EQU  >380         Address of Color Table
+SPRPG1 EQU  >700         Address of Page 1 of the sprite attribute list
+SPRPG2 EQU  >780         Address of Page 2 of the sprite attribute list
+PTNPG1 EQU  >800         Address of Character Pattern Table 1
+PTNPG2 EQU  >1000        Address of Character Pattern Table 2
+SPRTBL EQU  >1800        Address of Sprite Pattern Table
+
+VDPR1  DATA >01E2        Initial value of VDP register 1 (Set sprite type)
 VDPR2A DATA >0200        Initial value of VDP register 2 (page 1 of screen image table)
 VDPR2B DATA >0201        Secndry value of VDP register 2 (page 2 of screen image table)
-VDPR4  DATA >0401        Initial value of VDP register 4
-VDPR5A DATA >0540        Initial value of VDP register 5 (page 1 of sprite attribute list)
-VDPR5B DATA >0541        Secndry value of VDP register 5 (page 2 of sprite attribute list)
-VDPR6  DATA >0603        Initial value of VDP register 6
-VDPR7  DATA >0701        Initial value of VDP register 7
+VDPR4  DATA >0401        Initial value of VDP register 4 (Pattern Descriptor Table)
+VDPR5A DATA >050E        Initial value of VDP register 5 (page 1 of sprite attribute list)
+VDPR5B DATA >050F        Secndry value of VDP register 5 (page 2 of sprite attribute list)
+VDPR6  DATA >0603        Initial value of VDP register 6 (Sprite Descriptor Table)
+VDPR7  DATA >0701        Initial value of VDP register 7 (background color)
 
-WAITTM DATA 35           Amount of time to wait between hero animation frames
-KEYWT  DATA 15           Amount of time to wait between accepting key presses
+WAITTM DATA 20           Amount of time to wait between hero animation frames
+KEYWT  DATA 8            Amount of time to wait between accepting key presses
 
 * Initial contents of sprite attribute table
 SPRATT DATA >5070,>0002
