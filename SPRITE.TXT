@@ -30,8 +30,8 @@ MIDTIM DATA >FFFF        Decrements once every 1.363 ms.
 FLIPTM DATA >FFFF        When MIDTIM <= this value, go to next animation frame
 KEYTM  DATA >FFFF        When MIDTIM <= this value, it is okay to accept a key press
 ANIADR DATA HEROMV       Address of the next pair of hero characters to display in animation
-HERODR DATA 0            Specifies if hero is facing right
-HEROSL DATA 0            Specifies if hero is standing still
+HERODR DATA 0            If 0, hero is facing right
+HEROSL DATA 0            If 0, hero is standing still
 HEROX  BYTE >70          Current x position of hero
        EVEN
 
