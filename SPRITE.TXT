@@ -39,12 +39,6 @@ LOCLWS BSS  >20          Local Workspace
 ADDRG2 DATA 1            Add this to Reg 2 to flip screen image page
 ADDRG4 EQU  ADDRG2       Add this to Reg 4 to flip the pattern page
 ADDRG5 EQU  ADDRG2       Add this to Reg 5 to flip sprite attribute page
-VDPRG1 DATA >01E2        Current value of VDP register 1
-VDPRG2 DATA >0200        Current value of VDP register 2
-VDPRG4 DATA >0401        Current value of VDP register 4
-VDPRG5 DATA >0540        Current value of VDP register 5
-VDPRG6 DATA >0603        Current value of VDP register 6
-VDPRG7 DATA >0701        Current value of VDP register 7
 
 * Timer stuff
 TIMER  DATA >FFFF        Decrements once every 349.2 ms.
@@ -65,6 +59,15 @@ STACKH
 *
 * End of Editable values
 *
+
+VDPR1  DATA >01E2        Initial value of VDP register 1
+VDPR2A DATA >0200        Initial value of VDP register 2 (page 1 of screen image table)
+VDPR2B DATA >0201        Secndry value of VDP register 2 (page 2 of screen image table)
+VDPR4  DATA >0401        Initial value of VDP register 4
+VDPR5A DATA >0540        Initial value of VDP register 5 (page 1 of sprite attribute list)
+VDPR5B DATA >0541        Secndry value of VDP register 5 (page 2 of sprite attribute list)
+VDPR6  DATA >0603        Initial value of VDP register 6
+VDPR7  DATA >0701        Initial value of VDP register 7
 
 WAITTM DATA 35           Amount of time to wait between hero animation frames
 
@@ -112,23 +115,30 @@ GAMELP
 INTGAM DECT R10
        MOV  R11,*R10
 *
-       MOVB @VDPRG1+1,@REG1CP
-       MOV  @VDPRG1,R0
+       MOVB @VDPR1+1,@REG1CP
+       MOV  @VDPR1,R0
        BL   @VWTR
-       MOV  @VDPRG2,R0
+       MOV  @VDPR2A,R0
        BL   @VWTR
-       MOV  @VDPRG4,R0
+       MOV  @VDPR4,R0
        BL   @VWTR
-       MOV  @VDPRG5,R0
+       MOV  @VDPR5A,R0
        BL   @VWTR
-       MOV  @VDPRG6,R0
+       MOV  @VDPR6,R0
        BL   @VWTR
-       MOV  @VDPRG7,R0
+       MOV  @VDPR7,R0
        BL   @VWTR
 * Color table
        LI   R0,CLRTBL+4
        LI   R1,>1000
        BL   @VSBW
+* Clear Screen for page 2
+       LI   R0,SCNPG2
+       LI   R1,>2000
+INTG1  BL   @VSBW
+       INC  R0
+       CI   R0,SCNPG2+>300
+       JL   INTG1
 * Initialize Timer
        CLR  R12         CRU base of the TMS9901 
        SBO  0           Enter timer mode 
@@ -155,6 +165,8 @@ INTSPR DECT R10
        LI   R0,SPRPG1
        LI   R1,SPRATT
        LI   R2,9
+       BL   @VMBW
+       LI   R0,SPRPG2
        BL   @VMBW
 *
        MOV  *R10+,R11
@@ -229,13 +241,14 @@ HEROSP DECT R10
 * Confirm enough time has passed
        MOV  @MIDTIM,R0
        S    @FLIPTM,R0
-       JGT  HERORT
+       JGT  HEROR2
 * Redraw hero sprite, either moving or standing still
        MOV  @HEROSL,R0
        JNE  MOVANI
 * Display sprite as standing still
        MOV  @HEROST,R1
        BL   @HEROPK
+*
        MOV  *R10+,R11
        RT
 * Animate hero sprite as it moves
@@ -250,23 +263,30 @@ MOVANI S    @WAITTM,@FLIPTM
        LI   R5,HEROMV
 * Store next set of characters for animation
 HERORT MOV  R5,@ANIADR
-       MOV  *R10+,R11
+*
+HEROR2 MOV  *R10+,R11
        RT
 
-* Pass the new hero characters from R1 to VDP RAM
-* R1 is expected to have two characters, one in each byte.
-* If hero direction is "left", at >80 to each character code.
+* Write the next set of hero character codes to VDP RAM
+* R1 is expected to have two character codes, one in each byte.
 HEROPK DECT R10
        MOV  R11,*R10
-*
+* If hero direction is "left", at >80 to each character code.
        MOV  @HERODR,R2
        JEQ  MOVE1
        AI   R1,>8080
+* Select which page of the sprite attribute list we plan to write to
 MOVE1  LI   R0,SPRPG1+2
-       BL   @VSBW
+       MOV  @ADDRG2,@ADDRG2
+       JLT  MOVE2
+       LI   R0,SPRPG2+2
+* Write both character codes
+MOVE2  BL   @VSBW
        SWPB R1
-       LI   R0,SPRPG1+6
+       AI   R0,4
        BL   @VSBW
+* Flip page
+       BL   @FLIPPG
 *
        MOV  *R10+,R11
        RT
@@ -274,19 +294,27 @@ MOVE1  LI   R0,SPRPG1+2
 *
 * Flip Page
 *
-FLIPPG
-* Flip page for screen image table, pattern table, sprite attribute list
-       A    @ADDRG2,@VDPRG2
-       A    @ADDRG4,@VDPRG4
-       A    @ADDRG5,@VDPRG5
-       MOV  @VDPRG2,R0
+FLIPPG DECT R10
+       MOV  R11,*R10
+*
+       MOV  @ADDRG2,@ADDRG2
+       JGT  FLIP2
+* Switch to page 1DDD
+FLIP1  MOV  @VDPR2A,R0
        BL   @VWTR
-       MOV  @VDPRG4,R0
+       MOV  @VDPR5A,R0
        BL   @VWTR
-       MOV  @VDPRG5,R0
+       JMP  FLIPNG
+* Switch to page 2
+FLIP2  MOV  @VDPR2B,R0
        BL   @VWTR
-* Simultaneously negates ADDRG4 and ADDRG5
-       NEG  @ADDRG2
+       MOV  @VDPR5B,R0
+       BL   @VWTR
+* Specify the what the next page will be,
+* the page you shoud now write to.
+FLIPNG NEG  @ADDRG2
+*
+       MOV  *R10+,R11
        RT
 
 *
@@ -315,6 +343,8 @@ VSBW   DECT R10
 VMBW   DECT R10
        MOV  R0,*R10
        DECT R10
+       MOV  R1,*R10
+       DECT R10
        MOV  R2,*R10
 * Specify that we wish to write to the VDP RAM
        SZC  @BIT0,R0                  Set most signfication bit for writing
@@ -331,6 +361,7 @@ VMBW1  MOVB *R1+,@VDPWD
        JNE  VMBW1
 *
        MOV  *R10+,R2
+       MOV  *R10+,R1
        MOV  *R10+,R0
        RT
 
