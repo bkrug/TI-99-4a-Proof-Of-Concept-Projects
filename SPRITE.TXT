@@ -35,6 +35,7 @@ KEYTM  DATA >FFFF        When MIDTIM <= this value, it is okay to accept a key p
 ANIADR DATA HEROMV       Address of the next pair of hero characters to display in animation
 HERODR DATA 0            If 0, hero is facing right
 HEROSL DATA 0            If 0, hero is standing still
+DRAWNW DATA 0            If 0, Screen is out of date
 *
 MAPX   DATA 0            Current horizontal scroll amount for the map
 HEROX  DATA >60          Current x position of hero within the map
@@ -126,6 +127,10 @@ GAMELP
        BL   @TRCKTM
 * Process user input
        BL   @USRIPT
+*
+       MOV  @DRAWNW,R0
+       JNE  GAMELP
+       SETO @DRAWNW
 *
        LI   R0,>60
        LI   R2,MP01HD
@@ -311,10 +316,15 @@ USRIPT DECT R10
        BL   @KYSCAN
        CZC  @RWRGHT,R3
        JEQ  MOVRGT
+* Note if the screen needs to be updated
+       MOV  @HEROSL,R0
+       JEQ  STILL1
+       CLR  @DRAWNW
 * Note that the user isn't moving the hero
        CLR  @HEROSL
 * No key was pressed. Accept another key right away. Prevent timer cycling bug.
-       MOV  @MIDTIM,@KEYTM
+STILL1 MOV  @MIDTIM,@KEYTM
+       MOV  @MIDTIM,@FLIPTM
        JMP  USRRTN
 * Note that the user is moving the hero left
 MOVLFT SETO @HERODR
@@ -357,6 +367,8 @@ MRGHT1 MOV  @HEROX,R0
 * Specify time to wait before accepting another key press
 KEYNXT MOV  @MIDTIM,@KEYTM
        S    @KEYWT,@KEYTM
+* Note that the screen needs to be updated
+       CLR  @DRAWNW
 *
 USRRTN MOV  *R10+,R11
        RT
@@ -384,6 +396,7 @@ KYSCAN LI   R12,>0024
 * R2 - Address of map header
 DRWMAP DECT R10
        MOV  R11,*R10
+       MOV  R0,R4
 * R3 - Pixel Scroll Amount (left-most column)
 * R6 - Column Scroll Amount
        MOV  @MAPX,R6
@@ -398,27 +411,118 @@ DRWMAP DECT R10
 * Store position of map in R9
        MOV  @SCRENB(2),R9
        A    R6,R9
-HSCRL  LI   R7,>20
-HSCRL1 MOVB *R9,R1
-       CB   R1,@MINSCL
-       JL   HSCRL2
+* Write one row of characters
+HSCRL
+       MOVB *R9+,R1
        AB   R3,R1
-HSCRL2 MOVB R1,@VDPWD
-       INC  R9
-       DEC  R7
-       JNE  HSCRL1
+       MOVB R1,@VDPWD
+       MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
+       MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
+       MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
+       MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
+       MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
+       MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
+       MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
+       MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
+       MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
+       MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
+       MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
+       MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
+       MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
+       MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
+       MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
+       MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
+       MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
+       MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
+       MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
+       MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
+       MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
+       MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
+       MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
+       MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
+       MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
+       MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
+       MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
+       MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
+       MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
+       MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
+       MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
 *
        A    @MAPXT,R9                Increase R9 to equal address of next row
        C    R9,R8
-       JL   HSCRL
+       JHE  HSCRL3
+       B    @HSCRL
 *
+HSCRL3
        MOV  *R10+,R11
        RT
-DRWRT  DATA 0
 
 *
 * Specify the initial screen position to write to.
 *
+* R0 - a screen position, this routine will determine which byte of VDP RAM to use.
 INTCHR MOV  @NEXTPG,@NEXTPG
        JLT  ITCHR0
        AI   R0,SCNPG2
