@@ -36,9 +36,7 @@ LOCLWS BSS  >20          Local Workspace
 *
 * Data used for page flips
 *
-ADDRG2 DATA 1            Add this to Reg 2 to flip screen image page
-ADDRG4 EQU  ADDRG2       Add this to Reg 4 to flip the pattern page
-ADDRG5 EQU  ADDRG2       Add this to Reg 5 to flip sprite attribute page
+NEXTPG DATA 1            Next page to flip to. -1 implies page 1. +1 implies page 2.
 
 * Timer stuff
 TIMER  DATA >FFFF        Decrements once every 349.2 ms.
@@ -46,10 +44,13 @@ TIMER  DATA >FFFF        Decrements once every 349.2 ms.
 MIDTIM DATA >FFFF        Decrements once every 1.363 ms.
 *                        Holds the same value as the word at TIMER+1.
 
-FLIPTM DATA >FFF0        When MIDTIM <= this value, go to next animation frame
+FLIPTM DATA >FFFF        When MIDTIM <= this value, go to next animation frame
+KEYTM  DATA >FFFF        When MIDTIM <= this value, it is okay to accept a key press
 ANIADR DATA HEROMV       Address of the next pair of hero characters to display in animation
 HERODR DATA 0            Specifies if hero is facing right
 HEROSL DATA 0            Specifies if hero is standing still
+HEROX  BYTE >70          Current x position of hero
+       EVEN
 
        AORG >83F0
 STACKL BSS  >10
@@ -70,6 +71,7 @@ VDPR6  DATA >0603        Initial value of VDP register 6
 VDPR7  DATA >0701        Initial value of VDP register 7
 
 WAITTM DATA 35           Amount of time to wait between hero animation frames
+KEYWT  DATA 15           Amount of time to wait between accepting key presses
 
 * Initial contents of sprite attribute table
 SPRATT DATA >5070,>0002
@@ -90,6 +92,9 @@ HEROMV BYTE >00,>04
 HEROED
 * Codes for character standing still looking right.
 HEROST BYTE >20,>24
+*
+BYTE01 BYTE >01
+BYTEFF BYTE >FF
        EVEN
 
 RUNTST LWPI LOCLWS
@@ -194,6 +199,10 @@ TRCK1  MOV  R2,@TIMER+2
 *
 USRIPT DECT R10
        MOV  R11,*R10
+* If user pressed key recently, return to caller
+       MOV  @MIDTIM,R0
+       S    @KEYTM,R0
+       JGT  USRRTN
 * Scan for left move
        LI   R2,>0100
        BL   @KYSCAN
@@ -210,10 +219,16 @@ USRIPT DECT R10
 * Note that the user is moving the hero left
 MOVLFT SETO @HERODR
        SETO @HEROSL
-       JMP  USRRTN
+       AB   @BYTEFF,@HEROX
+       JMP  KEYNXT
 * Note that the user is moving the hero right
 MOVRGT CLR  @HERODR
        SETO @HEROSL
+       AB   @BYTE01,@HEROX
+* Specify time to wait before accepting another key press
+KEYNXT MOV  @MIDTIM,@KEYTM
+       S    @KEYWT,@KEYTM
+*
 USRRTN MOV  *R10+,R11
        RT
 * Left keyboard row
@@ -271,17 +286,26 @@ HEROR2 MOV  *R10+,R11
 * R1 is expected to have two character codes, one in each byte.
 HEROPK DECT R10
        MOV  R11,*R10
-* If hero direction is "left", at >80 to each character code.
-       MOV  @HERODR,R2
-       JEQ  MOVE1
-       AI   R1,>8080
+       DECT R10
+       MOV  R1,*R10
 * Select which page of the sprite attribute list we plan to write to
-MOVE1  LI   R0,SPRPG1+2
-       MOV  @ADDRG2,@ADDRG2
-       JLT  MOVE2
-       LI   R0,SPRPG2+2
+       LI   R0,SPRPG1+1
+       MOV  @NEXTPG,@NEXTPG
+       JLT  PK2
+       LI   R0,SPRPG2+1
+* Respecify hero location
+PK2    MOVB @HEROX,R1
+       BL   @VSBW
+       AI   R0,4
+       BL   @VSBW
+* If hero direction is "left", at >80 to each character code.
+       MOV  *R10+,R1
+       MOV  @HERODR,R2
+       JEQ  PK3
+       AI   R1,>8080
 * Write both character codes
-MOVE2  BL   @VSBW
+PK3    AI   R0,-3
+       BL   @VSBW
        SWPB R1
        AI   R0,4
        BL   @VSBW
@@ -297,7 +321,7 @@ MOVE2  BL   @VSBW
 FLIPPG DECT R10
        MOV  R11,*R10
 *
-       MOV  @ADDRG2,@ADDRG2
+       MOV  @NEXTPG,@NEXTPG
        JGT  FLIP2
 * Switch to page 1DDD
 FLIP1  MOV  @VDPR2A,R0
@@ -312,7 +336,7 @@ FLIP2  MOV  @VDPR2B,R0
        BL   @VWTR
 * Specify the what the next page will be,
 * the page you shoud now write to.
-FLIPNG NEG  @ADDRG2
+FLIPNG NEG  @NEXTPG
 *
        MOV  *R10+,R11
        RT
