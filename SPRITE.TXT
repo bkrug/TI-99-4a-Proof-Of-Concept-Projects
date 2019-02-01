@@ -215,6 +215,8 @@ USRIPT DECT R10
        JEQ  MOVRGT
 * Note that the user isn't moving the hero
        CLR  @HEROSL
+* No key was pressed. Accept another key right away. Prevent timer cycling bug.
+       MOV  @MIDTIM,@KEYTM
        JMP  USRRTN
 * Note that the user is moving the hero left
 MOVLFT SETO @HERODR
@@ -257,21 +259,23 @@ HEROSP DECT R10
        MOV  @MIDTIM,R0
        S    @FLIPTM,R0
        JGT  HEROR2
+* Set next wait time
+       S    @WAITTM,@FLIPTM
 * Redraw hero sprite, either moving or standing still
        MOV  @HEROSL,R0
        JNE  MOVANI
 * Display sprite as standing still
        MOV  @HEROST,R1
-       BL   @HEROPK
+       BL   @HEROVD
 *
        MOV  *R10+,R11
        RT
 * Animate hero sprite as it moves
-MOVANI S    @WAITTM,@FLIPTM
+MOVANI
 * Move to next frame
        MOV  @ANIADR,R5
        MOV  *R5+,R1
-       BL   @HEROPK
+       BL   @HEROVD
 * Restart animation loop if necessary
        CI   R5,HEROED
        JL   HERORT
@@ -282,9 +286,9 @@ HERORT MOV  R5,@ANIADR
 HEROR2 MOV  *R10+,R11
        RT
 
-* Write the next set of hero character codes to VDP RAM
+* Update the hero-portion of the sprite attribute list in VDP RAM
 * R1 is expected to have two character codes, one in each byte.
-HEROPK DECT R10
+HEROVD DECT R10
        MOV  R11,*R10
        DECT R10
        MOV  R1,*R10
