@@ -35,10 +35,12 @@ KEYTM  DATA >FFFF        When MIDTIM <= this value, it is okay to accept a key p
 ANIADR DATA HEROMV       Address of the next pair of hero characters to display in animation
 HERODR DATA 0            If 0, hero is facing right
 HEROSL DATA 0            If 0, hero is standing still
-HEROX  DATA >70          Current x position of hero
+*
+MAPX   DATA 0            Current horizontal scroll amount for the map
+HEROX  DATA >60          Current x position of hero within the map
 *
 MAPWD  DATA 0            Width of current map
-MAPXT  DATA 0            Width of current map - >20 (screen width)
+MAPXT  DATA 0            Width of current map - 32 (screen width)
 * Used to create shifted version of characters
 PATBUF BSS  64
 PATEND
@@ -84,6 +86,9 @@ VDPR7  DATA >0701        Initial value of VDP register 7 (background color)
 HEROWT DATA 20           Amount of time to wait between hero animation frames
 KEYWT  DATA 8            Amount of time to wait between accepting key presses
 
+MXOFST DATA >70          The hero's right-most offset should not exceed this value accept at the right-edge of the map.
+MNOFST DATA >60          The hero's left-most offset should not drop below this value accept at the left-edge of the map.
+
 * Initial contents of sprite attribute table
 SPRATT DATA >A070,>0002
        DATA >B070,>0402
@@ -124,8 +129,6 @@ GAMELP
 *
        LI   R0,>60
        LI   R2,MP01HD
-       LI   R3,>500               * R3 - Pixel Scroll Amount
-       LI   R6,4                  * R6 - Column Scroll Amount
        BL   @DRWMAP
 * Redraw hero sprite
        BL   @HEROSP
@@ -317,11 +320,40 @@ USRIPT DECT R10
 MOVLFT SETO @HERODR
        SETO @HEROSL
        DEC  @HEROX
+* Don't let HEROX drop belwo zero
+       JGT  MLFT1
+       CLR  @HEROX
+* Adjust map position if necessary
+MLFT1  MOV  @HEROX,R0
+       S    @MNOFST,R0
+       C    @MAPX,R0
+       JLT  KEYNXT
+       MOV  R0,@MAPX                 * Shift map, we move too far left
+       JGT  KEYNXT
+       CLR  @MAPX                    * We shifted too far, we're close to the left edge of the map
        JMP  KEYNXT
 * Note that the user is moving the hero right
 MOVRGT CLR  @HERODR
        SETO @HEROSL
        INC  @HEROX
+* Don't let HEROX go off right edge of map
+       MOV  @MAPWD,R0
+       SLA  R0,3
+       AI   R0,-16
+       C    R0,@HEROX
+       JHE  MRGHT1
+       MOV  R0,@HEROX
+* Adjust map position if necessary
+MRGHT1 MOV  @HEROX,R0
+       S    @MXOFST,R0
+       C    @MAPX,R0
+       JGT  KEYNXT
+       MOV  R0,@MAPX                * Shift map, we moved too far right
+       MOV  @MAPXT,R0
+       SLA  R0,3
+       C    R0,@MAPX
+       JHE  KEYNXT
+       MOV  R0,@MAPX                * We shifted too far, we're close to the right edge of the map
 * Specify time to wait before accepting another key press
 KEYNXT MOV  @MIDTIM,@KEYTM
        S    @KEYWT,@KEYTM
@@ -350,10 +382,16 @@ KYSCAN LI   R12,>0024
 *
 * R0 - Screen location to write to
 * R2 - Address of map header
-* R3 - Pixel Scroll Amount (left-most column)
-* R6 - Column Scroll Amount
 DRWMAP DECT R10
        MOV  R11,*R10
+* R3 - Pixel Scroll Amount (left-most column)
+* R6 - Column Scroll Amount
+       MOV  @MAPX,R6
+       MOV  R6,R3
+       SRL  R6,3
+       SLA  R3,13
+       SRL  R3,5
+*
        BL   @INTCHR
 * Store end of map in R8
        MOV  @SCREND(2),R8
@@ -440,6 +478,7 @@ HEROVD DECT R10
        LI   R0,SPRPG2+1
 * Respecify hero location
 PK2    MOV  @HEROX,R1
+       S    @MAPX,R1
        SWPB R1
        BL   @VSBW
        AI   R0,4
