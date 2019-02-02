@@ -1,6 +1,7 @@
        DEF  RUNTST
        REF  SPR0,SPREND,SPRLEN
        REF  MP01HD
+       REF  MUSIC,MUSICE
 
 * A program to test shifting the screen left and right
 * This scroll method involves defining grops of 8 characters
@@ -57,6 +58,11 @@ STACKH
 *
 * End of Editable values
 *
+
+* Need to move this to the scratch pad later
+MUSICP DATA MUSIC        Current position in music list
+MUSICD DATA >FFFF        When MIDTIM <= this value, change or turn off current tone.
+SILNCD DATA >FFFF        If = 0, play silence next. Else play tone next.
 
 * CPU RAM Addresses
 USRISR EQU  >83C4        Address defining address of interupt routine
@@ -127,6 +133,8 @@ GAMELP
        BL   @TRCKTM
 * Process user input
        BL   @USRIPT
+*
+       BL   @PLYMSC
 *
        MOV  @DRAWNW,R0
        JNE  GAMELP
@@ -387,6 +395,44 @@ KYSCAN LI   R12,>0024
        LI   R12,>0006
        CLR  R3
        STCR R3,8
+       RT
+
+NTREST DATA 20                      rest between notes
+PLYMSC C    @MIDTIM,@MUSICD
+       JLE  PLYM1
+       RT
+* Specify sound address
+PLYM1  LI   R0,>8400
+* Decide if we should play tone or silence
+       MOV  @SILNCD,@SILNCD
+       JEQ  PLYSLC
+* Load tone and volume into sound address
+       MOV  @MUSICP,R1
+       MOVB *R1+,*R0
+       NOP
+       MOVB *R1+,*R0
+       LI   R2,>9800
+       MOVB R2,*R0
+* Set timer
+       MOV  @MIDTIM,@MUSICD
+       S    *R1+,@MUSICD
+       A    @NTREST,@MUSICD
+*
+       CI   R1,MUSICE
+       JNE  PLYM2
+       LI   R1,MUSIC
+PLYM2  MOV  R1,@MUSICP
+*
+       INV  @SILNCD
+       RT
+* Turn off sound generator
+PLYSLC LI   R1,>9F00
+       MOVB R1,*R0
+* Set timer
+       MOV  @MIDTIM,@MUSICD
+       S    @NTREST,@MUSICD
+*
+       INV  @SILNCD
        RT
 
 *
