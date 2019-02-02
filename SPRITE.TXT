@@ -1,7 +1,7 @@
        DEF  RUNTST
        REF  SPR0,SPREND,SPRLEN
        REF  MP01HD
-       REF  MUSIC,MUSICE
+       REF  MUSIC1,MEND1
 
 * A program to test shifting the screen left and right
 * This scroll method involves defining grops of 8 characters
@@ -52,8 +52,7 @@ MINSCL BSS  1            Minimum scrollable character
        EVEN
 
        AORG >83F0
-STACKL BSS  >10
-STACKH
+STACK  BES  >10
 
        RORG
 *
@@ -119,12 +118,12 @@ BYTEFF BYTE >FF
        EVEN
 
 RUN    LWPI LOCLWS
-       LI   R0,MUSIC
+       LI   R0,MUSIC1
        MOV  R0,@MUSICP
        SETO @MUSICD
        SETO @SILNCD
 * Initialize Stack
-       LI   R10,STACKH
+       LI   R10,STACK
 * Initialize Game
        BL   @INTGAM
        BL   @INTSPR
@@ -427,9 +426,9 @@ PLYM1  LI   R0,>8400
        S    *R1+,@MUSICD
        A    @NTREST,@MUSICD
 *
-       CI   R1,MUSICE
+       CI   R1,MEND1
        JNE  PLYM2
-       LI   R1,MUSIC
+       LI   R1,MUSIC1
 PLYM2  MOV  R1,@MUSICP
 *
        INV  @SILNCD
