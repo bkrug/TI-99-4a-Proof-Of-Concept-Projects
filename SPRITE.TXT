@@ -43,11 +43,12 @@ HEROX  DATA >60          Current x position of hero within the map
 *
 MAPWD  DATA 0            Width of current map
 MAPXT  DATA 0            Width of current map - 32 (screen width)
-* Used to create shifted version of characters
-PATBUF BSS  64
-PATEND
 *
-MINSCL BYTE 0            Minimum scrollable character
+MUSICP BSS  2            Current position in music list
+MUSICD BSS  2            When MIDTIM <= this value, change or turn off current tone.
+SILNCD BSS  2            If = 0, play silence next. Else play tone next.
+*
+MINSCL BSS  1            Minimum scrollable character
        EVEN
 
        AORG >83F0
@@ -60,9 +61,9 @@ STACKH
 *
 
 * Need to move this to the scratch pad later
-MUSICP DATA MUSIC        Current position in music list
-MUSICD DATA >FFFF        When MIDTIM <= this value, change or turn off current tone.
-SILNCD DATA >FFFF        If = 0, play silence next. Else play tone next.
+*MUSICP DATA MUSIC        Current position in music list
+*MUSICD DATA >FFFF        When MIDTIM <= this value, change or turn off current tone.
+*SILNCD DATA >FFFF        If = 0, play silence next. Else play tone next.
 
 * CPU RAM Addresses
 USRISR EQU  >83C4        Address defining address of interupt routine
@@ -121,6 +122,10 @@ BYTEFF BYTE >FF
        EVEN
 
 RUNTST LWPI LOCLWS
+       LI   R0,MUSIC
+       MOV  R0,@MUSICP
+       SETO @MUSICD
+       SETO @SILNCD
 * Initialize Stack
        LI   R10,STACKH
 * Initialize Game
@@ -246,44 +251,51 @@ INTMAP DECT R10
        MOV  @COLORB(9),R1         * >A8C0
        MOV  @COLORG(9),R2         * >14
        BL   @VMBW
-* Write character patterns from >60
-* We are copying portions of 16-pixel characters
-* to 8-pixel characters
-* R3 - VDP address
-* R4 - address of leftmost 8 pixels
-* R5 - address of rightmost 8 pixels
-* R7 - 16 pixels
-* R8 - address of end of pattern data
+* Write character patterns from value MINSCL (some ASCII code)
+* We taking two character patterns and creating a set of 8 patterns
+* Each pattern in the set is pixel-shifted one pixel relative to the previous pattern
+*
+* Specify starting address in VDPRAM
        MOVB @MINSCL,R3
-       SWPB R3
+       SRL  R3,8
        SLA  R3,3
-       AI   R3,PTNPG1              R3 = first char code * 8 + pattern table address
+       AI   R3,PTNPG1                R3 = first char code * 8 + pattern table address
+       SZC  @BIT0,R3                 Set most signfication bit for writing
+       SOC  @BIT1,R3                 Set second most signfication bit for writing
+       SWPB R3
+       MOVB R3,@VDPWA
+       SWPB R3
+       MOVB R3,@VDPWA
+* Set R4 to the address of the first character pattern
        MOV  @PATRNB(9),R4
-       AI   R4,2
-       MOV  @PATRNB(9),R5
-       AI   R5,10
-       MOV  @PATRND(9),R8
-CHAR0  LI   R6,PATBUF
-CHAR1  MOVB *R5+,R7
+       INCT R4
+* Set R5 to the address of the left-most of two patterns
+* Set R4 to the address of the right-most of two patterns
+* Set R0 to the amount that the pattern should be shifted by
+INTMP2 MOV  R4,R5
+       AI   R4,>8
+       CLR  R0
+* Write the pixel-shifted value to VDP RAM
+INTMP3 MOVB @8(5),R7
        SWPB R7
-       MOVB *R4+,R7
-CHAR2  MOVB R7,*R6
-       SLA  R7,1
-       AI   R6,8
-       CI   R6,PATEND
-       JL   CHAR2
-       AI   R6,PATBUF-PATEND+1
-       CI   R6,PATBUF+8
-       JL   CHAR1
-       MOV  R3,R0
-       LI   R1,PATBUF
-       LI   R2,PATEND-PATBUF
-       BL   @VMBW
-       AI   R3,8*8
+       MOVB *R5+,R7
+       MOV  R0,R0
+       JEQ  INTMP4                      Don't shift if R0 contains 0.
+       SLA  R7,0
+INTMP4 MOVB R7,@VDPWD
+* Repeat 8 times
+       C    R5,R4
+       JL   INTMP3
+* Repeat the process for the same pair of characters, but shift by one more pixel
+       AI   R5,-8
+       INC  R0
+       CI   R0,8
+       JL   INTMP3
+* Repeat the process for a different pair of characters
        AI   R4,8
-       AI   R5,8
-       C    R4,R8
-       JL   CHAR0
+* Repeat unless we've reached the end of the pattern data
+       C    R4,@PATRND(9)
+       JL   INTMP2
 *
        MOV  *R10+,R11
        RT
