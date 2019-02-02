@@ -1,7 +1,7 @@
        DEF  RUNTST
        REF  SPR0,SPREND,SPRLEN
        REF  MP01HD
-       REF  MUSIC1,MEND1
+       REF  MUSIC1,MEND1,MUSIC2,MEND2
 
 * A program to test shifting the screen left and right
 * This scroll method involves defining grops of 8 characters
@@ -44,9 +44,12 @@ HEROX  DATA >60          Current x position of hero within the map
 MAPWD  DATA 0            Width of current map
 MAPXT  DATA 0            Width of current map - 32 (screen width)
 *
-MUSICP BSS  2            Current position in music list
-MUSICD BSS  2            When MIDTIM <= this value, change or turn off current tone.
-SILNCD BSS  2            If = 0, play silence next. Else play tone next.
+MSC1PS BSS  2            Current position in tone generator 1's music data
+MSC2PS BSS  2            Current position in tone generator 2's music data
+MSC1WT BSS  2            When MIDTIM <= this value, change or turn off tone generator 1
+MSC2WT BSS  2            When MIDTIM <= this value, change or turn off tone generator 2
+SILNC1 BSS  2            If = 0, play silence next. Else play tone next (generator 1)
+SILNC2 BSS  2            If = 0, play silence next. Else play tone next (generator 2)
 *
 MINSCL BSS  1            Minimum scrollable character
        EVEN
@@ -119,9 +122,13 @@ BYTEFF BYTE >FF
 
 RUN    LWPI LOCLWS
        LI   R0,MUSIC1
-       MOV  R0,@MUSICP
-       SETO @MUSICD
-       SETO @SILNCD
+       MOV  R0,@MSC1PS
+       LI   R0,MUSIC2
+       MOV  R0,@MSC2PS
+       SETO @MSC1WT
+       SETO @MSC2WT
+       SETO @SILNC1
+       SETO @SILNC2
 * Initialize Stack
        LI   R10,STACK
 * Initialize Game
@@ -173,13 +180,20 @@ INTGAM DECT R10
        LI   R0,CLRTBL+4
        LI   R1,>1000
        BL   @VSBW
-* Clear Screen for page 2
-       LI   R0,SCNPG2
+* Clear Screen for page 1
+       LI   R0,SCNPG1
        LI   R1,>2000
 INTG1  BL   @VSBW
        INC  R0
-       CI   R0,SCNPG2+>300
+       CI   R0,SCNPG1+>300
        JL   INTG1
+* Clear Screen for page 2
+       LI   R0,SCNPG2
+       LI   R1,>2000
+INTG2  BL   @VSBW
+       INC  R0
+       CI   R0,SCNPG2+>300
+       JL   INTG2
 * Initialize Timer
        CLR  R12         CRU base of the TMS9901 
        SBO  0           Enter timer mode 
@@ -405,42 +419,81 @@ KYSCAN LI   R12,>0024
        STCR R3,8
        RT
 
+*
+* If the timing is right,
+* play the next note of music in Sound Generator 1 & 2
+*
 NTREST DATA 20                      rest between notes
-PLYMSC C    @MIDTIM,@MUSICD
+PLYMSC DECT R10
+       MOV  R11,*R10
+* Update the tone for sound generator 1
+       LI   R0,>8400
+       LI   R3,MSC1PS
+       LI   R4,MSC1WT
+       LI   R5,SILNC1
+       LI   R6,MUSIC1
+       LI   R7,MEND1
+       LI   R8,>9000
+       BL   @PLYM0
+* Update the tone for sound generator 2
+       LI   R3,MSC2PS
+       LI   R4,MSC2WT
+       LI   R5,SILNC2
+       LI   R6,MUSIC2
+       LI   R7,MEND2
+       LI   R8,>B000
+       BL   @PLYM0
+*
+       MOV  *R10+,R11
+       RT
+
+*
+* Change the state of either sound generator 1 or 2
+*
+* R0 - address to send sound generator data to
+* R3 - address of the next piece of data for sound generator
+* R4 - address of the scheduled time to change generator tone
+* R5 - address specifying if generator should now play silence
+* R6 - address of beginning of sound generator data
+* R7 - address of end of sound generator data
+* R8 - used to change the generator's volume
+PLYM0
+* Check if enough time has passed
+       C    @MIDTIM,*R4
        JLE  PLYM1
        RT
-* Specify sound address
-PLYM1  LI   R0,>8400
+PLYM1  
 * Decide if we should play tone or silence
-       MOV  @SILNCD,@SILNCD
+       MOV  *R5,*R5
        JEQ  PLYSLC
 * Load tone and volume into sound address
-       MOV  @MUSICP,R1
+       MOV  *R3,R1
        MOVB *R1+,*R0
        NOP
        MOVB *R1+,*R0
-       LI   R2,>9800
-       MOVB R2,*R0
+       AI   R8,>800
+       MOVB R8,*R0
 * Set timer
-       MOV  @MIDTIM,@MUSICD
-       S    *R1+,@MUSICD
-       A    @NTREST,@MUSICD
-*
-       CI   R1,MEND1
+       MOV  @MIDTIM,*R4
+       S    *R1+,*R4
+       A    @NTREST,*R4
+* Restart music data if necessary
+       C    R1,R7
        JNE  PLYM2
-       LI   R1,MUSIC1
-PLYM2  MOV  R1,@MUSICP
+       MOV  R6,R1
+* Update position within music data
+PLYM2  MOV  R1,*R3
 *
-       INV  @SILNCD
+       INV  *R5
        RT
 * Turn off sound generator
-PLYSLC LI   R1,>9F00
-       MOVB R1,*R0
+PLYSLC AI   R8,>0F00
+       MOVB R8,*R0
 * Set timer
-       MOV  @MIDTIM,@MUSICD
-       S    @NTREST,@MUSICD
+       MOV  @MIDTIM,*R4
+       S    @NTREST,*R4
 *
-       INV  @SILNCD
+       INV  *R5
        RT
 
 *
