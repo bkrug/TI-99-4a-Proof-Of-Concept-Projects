@@ -60,10 +60,7 @@ STACKH
 * End of Editable values
 *
 
-* Need to move this to the scratch pad later
-*MUSICP DATA MUSIC        Current position in music list
-*MUSICD DATA >FFFF        When MIDTIM <= this value, change or turn off current tone.
-*SILNCD DATA >FFFF        If = 0, play silence next. Else play tone next.
+RUNTST B    @RUN
 
 * CPU RAM Addresses
 USRISR EQU  >83C4        Address defining address of interupt routine
@@ -121,7 +118,7 @@ BYTE01 BYTE >01
 BYTEFF BYTE >FF
        EVEN
 
-RUNTST LWPI LOCLWS
+RUN    LWPI LOCLWS
        LI   R0,MUSIC
        MOV  R0,@MUSICP
        SETO @MUSICD
