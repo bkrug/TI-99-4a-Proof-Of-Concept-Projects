@@ -3,7 +3,8 @@
 
 * https://musescore.com/user/33378/scores/50843
 * This music starts with the second measure on page 6 of the above link.
-* This is part "Vln."
+* There is an astrisk inbetween each measure of music
+* This is part "Vln." 
 MUSIC1 DATA A31,N16
        DATA C31,N16
        DATA A31,N16
@@ -108,7 +109,7 @@ MUSIC1 DATA A31,N16
 	   DATA BB31,N32
 
 	   DATA C41,N8
-	   DATA REST,N32
+	   DATA REST,N32    * Rest goes here
 	   DATA C41,N32
 	   DATA DB41,N32
 	   DATA EB41,N32
@@ -121,7 +122,7 @@ MUSIC1 DATA A31,N16
 	   DATA DB41,N32
 	   DATA EB41,N32
 *
-       DATA C11,800
+       DATA C11,N2
 MEND1
 
 * This is part "Vlns. 2"
@@ -208,11 +209,11 @@ MUSIC2 DATA F32,N16
 	   DATA A12,N8
 	   DATA A12,N8
 *
-       DATA C32,800
+       DATA C32,N2
 MEND2
 
-
-N1     EQU  1984
+NDBL   EQU  64
+N1     EQU  32
 N2     EQU  N1/2
 N4     EQU  N1/4
 N8     EQU  N1/8
