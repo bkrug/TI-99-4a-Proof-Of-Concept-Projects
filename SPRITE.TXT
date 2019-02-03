@@ -1,7 +1,7 @@
        DEF  RUNTST
        REF  SPR0,SPREND,SPRLEN
        REF  MP01HD
-       REF  MUSIC1,MEND1,MUSIC2,MEND2
+       REF  MUSIC1,MEND1,MUSIC2,MEND2,REST
 
 * A program to test shifting the screen left and right
 * This scroll method involves defining grops of 8 characters
@@ -119,6 +119,8 @@ HEROST BYTE >20,>24
 BYTE01 BYTE >01
 BYTEFF BYTE >FF
        EVEN
+
+RESTVL DATA REST
 
 RUN    LWPI LOCLWS
        LI   R0,MUSIC1
@@ -423,7 +425,7 @@ KYSCAN LI   R12,>0024
 * If the timing is right,
 * play the next note of music in Sound Generator 1 & 2
 *
-NTREST DATA 20                      rest between notes
+NTPAUS DATA 20                      pause between notes (not same as a rest)
 PLYMSC DECT R10
        MOV  R11,*R10
 * Update the tone for sound generator 1
@@ -466,33 +468,42 @@ PLYM1
 * Decide if we should play tone or silence
        MOV  *R5,*R5
        JEQ  PLYSLC
+* If playing a rest, turn off the sound generator
+       C    *R1,@RESTVL
+       JEQ  PLYRST
 * Load tone and volume into sound address
        MOV  *R3,R1
        MOVB *R1+,*R0
        NOP
        MOVB *R1+,*R0
+       JEQ  PLYM2
        AI   R8,>800
        MOVB R8,*R0
 * Set timer
-       MOV  @MIDTIM,*R4
+PLYM2  MOV  @MIDTIM,*R4
        S    *R1+,*R4
-       A    @NTREST,*R4
+       A    @NTPAUS,*R4
 * Restart music data if necessary
        C    R1,R7
-       JNE  PLYM2
+       JNE  PLYM3
        MOV  R6,R1
 * Update position within music data
-PLYM2  MOV  R1,*R3
-*
+PLYM3  MOV  R1,*R3
+* Switch between playing tone or pausing between tones
        INV  *R5
        RT
+* Turn off the sound generater to play a rest
+PLYRST AI   R8,>F00
+       MOVB R8,*R0
+       INCT R1
+       JMP  PLYM2
 * Turn off sound generator
-PLYSLC AI   R8,>0F00
+PLYSLC AI   R8,>F00
        MOVB R8,*R0
 * Set timer
        MOV  @MIDTIM,*R4
-       S    @NTREST,*R4
-*
+       S    @NTPAUS,*R4
+* Switch between playing tone or pausing between tones
        INV  *R5
        RT
 
