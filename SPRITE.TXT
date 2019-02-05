@@ -44,6 +44,7 @@ HEROX  DATA >60          Current x position of hero within the map
 MAPWD  DATA 0            Width of current map
 MAPXT  DATA 0            Width of current map - 32 (screen width)
 *
+ENABLM BSS  2            If = 0, music is enabled
 MSC1PS BSS  2            Current position in tone generator 1's music data
 MSC2PS BSS  2            Current position in tone generator 2's music data
 BEATWT BSS  2            When MIDTIM <= this value, play next beat or pause between beats
@@ -92,6 +93,7 @@ VDPR7  DATA >0701        Initial value of VDP register 7 (background color)
 
 HEROWT DATA 20           Amount of time to wait between hero animation frames
 KEYWT  DATA 8            Amount of time to wait between accepting key presses
+MKEYWT DATA 400          Amount of time to wait betewen accepting M-key presses
 
 MXOFST DATA >70          The hero's right-most offset should not exceed this value accept at the right-edge of the map.
 MNOFST DATA >60          The hero's left-most offset should not drop below this value accept at the left-edge of the map.
@@ -129,6 +131,7 @@ RUN    LWPI LOCLWS
        CLR  @M1BEAT
        CLR  @M2BEAT
        SETO @SILNC1
+       CLR  @ENABLM
 * Initialize Stack
        LI   R10,STACK
 * Initialize Game
@@ -352,11 +355,6 @@ SCANL2 INCT R1
 * If no key was pressed, run the NOINPT routine
        MOV  R9,R9
        JNE  NOINPT
-* Specify time to wait before accepting another key press
-       MOV  @MIDTIM,@KEYTM
-       S    @KEYWT,@KEYTM
-* Note that the screen needs to be updated
-       CLR  @DRAWNW
 *
 USRRTN MOV  *R10+,R11
        RT
@@ -383,11 +381,11 @@ MOVLFT SETO @HERODR
 MLFT1  MOV  @HEROX,R0
        S    @MNOFST,R0
        C    @MAPX,R0
-       JLT  SCANL2
+       JLT  LRUPT
        MOV  R0,@MAPX                 * Shift map, we move too far left
-       JGT  SCANL2
+       JGT  LRUPT
        CLR  @MAPX                    * We shifted too far, we're close to the left edge of the map
-       JMP  SCANL2
+       JMP  LRUPT
 
 * Note that the user is moving the hero right
 MOVRGT CLR  @HERODR
@@ -404,13 +402,29 @@ MOVRGT CLR  @HERODR
 MRGHT1 MOV  @HEROX,R0
        S    @MXOFST,R0
        C    @MAPX,R0
-       JGT  SCANL2
+       JGT  LRUPT
        MOV  R0,@MAPX                * Shift map, we moved too far right
        MOV  @MAPXT,R0
        SLA  R0,3
        C    R0,@MAPX
-       JHE  SCANL2
+       JHE  LRUPT
        MOV  R0,@MAPX                * We shifted too far, we're close to the right edge of the map
+       JMP  LRUPT
+
+* Do the following updates if a move key was pressed.
+LRUPT
+* Specify time to wait before accepting another key press
+       MOV  @MIDTIM,@KEYTM
+       S    @KEYWT,@KEYTM
+* Note that the screen needs to be updated
+       CLR  @DRAWNW
+	   JMP  SCANL2
+
+* Enable/Disable music
+SWPMSC INV  @ENABLM
+* Specify time to wait before accepting another key press
+       MOV  @MIDTIM,@KEYTM
+       S    @MKEYWT,@KEYTM
        JMP  SCANL2
 
 * Scan
@@ -434,11 +448,16 @@ RWRGHT EQU  >2000
 * Fire-button keyboard column and row
 CLFIRE EQU  >0400
 RWFIRE EQU  >0400
+* M-key keyboard column and row
+CLMKEY EQU  >0300
+RWMKEY EQU  >0100
 *
 * Keys to scan for and associated routine to jump to
 SCANJP DATA CLLEFT,RWLEFT,MOVLFT
        DATA CLRGHT,RWRGHT,MOVRGT
-SCANJE DATA CLFIRE,RWFIRE,>0000
+       DATA CLFIRE,RWFIRE,>0000
+       DATA CLMKEY,RWMKEY,SWPMSC
+SCANJE
 
 *
 * If the timing is right,
@@ -450,8 +469,11 @@ RESTVL DATA REST                    if this is in place of a tone, then do a res
 * A beat really lasts 70 units.
 * 50 units is the tone phase, 20 units is the silence phase.
 PLYMSC C    @MIDTIM,@BEATWT
-       JLE  PLYNOW
-       RT
+       MOV  @MIDTIM,R0
+       S    @BEATWT,R0
+       JGT  WAITPL
+       MOV  @ENABLM,R0
+       JNE  NOTPLY
 *
 PLYNOW DECT R10
        MOV  R11,*R10
@@ -486,6 +508,12 @@ PLYW1  MOV  @MIDTIM,@BEATWT
 PLYMRT INV  *R5
 *
        MOV  *R10+,R11
+WAITPL RT
+* Turn music off
+NOTPLY LI   R8,>9F00
+       MOVB R8,@>8400
+       LI   R8,>BF00
+       MOVB R8,@>8400
        RT
 
 *
