@@ -64,63 +64,193 @@ MUSIC1 DATA A31,N16
        DATA BB21,N16
        DATA BB21,N16
        DATA BB21,N16
-*
-	   DATA E31,N16
-	   DATA BB21,N16
-	   DATA E31,N16
-	   DATA BB21,N16
-	   DATA E31,N16
-	   DATA BB21,N16
-	   DATA E31,N16
-	   DATA BB21,N16
+* Page 7
+       DATA E31,N16
+       DATA BB21,N16
+       DATA E31,N16
+       DATA BB21,N16
+       DATA E31,N16
+       DATA BB21,N16
+       DATA E31,N16
+       DATA BB21,N16
 
-	   DATA F31,N32
-	   DATA E31,N32
-	   DATA F31,N32
-	   DATA G31,N32
-	   DATA F31,N32
-	   DATA G31,N32
-	   DATA E31,N32
-	   DATA F31,N32
-	   DATA G31,N32
-	   DATA F31,N32
-	   DATA G31,N32
-	   DATA AB31,N32
-	   DATA G31,N32
-	   DATA AB31,N32
-	   DATA F31,N32
-	   DATA G31,N32
+       DATA F31,N32
+       DATA E31,N32
+       DATA F31,N32
+       DATA G31,N32
+       DATA F31,N32
+       DATA G31,N32
+       DATA E31,N32
+       DATA F31,N32
+       DATA G31,N32
+       DATA F31,N32
+       DATA G31,N32
+       DATA AB31,N32
+       DATA G31,N32
+       DATA AB31,N32
+       DATA F31,N32
+       DATA G31,N32
 *
        DATA AB31,N32
-	   DATA G31,N32
-	   DATA AB31,N32
-	   DATA BB31,N32
-	   DATA AB31,N32
-	   DATA BB31,N32
-	   DATA GB31,N32
-	   DATA AB31,N32
-	   DATA BB31,N32
-	   DATA AB31,N32
-	   DATA BB31,N32
-	   DATA C41,N32
-	   DATA BB31,N32
-	   DATA C41,N32
-	   DATA AB31,N32
-	   DATA BB31,N32
+       DATA G31,N32
+       DATA AB31,N32
+       DATA BB31,N32
+       DATA AB31,N32
+       DATA BB31,N32
+       DATA GB31,N32
+       DATA AB31,N32
+       DATA BB31,N32
+       DATA AB31,N32
+       DATA BB31,N32
+       DATA C41,N32
+       DATA BB31,N32
+       DATA C41,N32
+       DATA AB31,N32
+       DATA BB31,N32
 
-	   DATA C41,N8
-	   DATA REST,N32    * Rest goes here
-	   DATA C41,N32
-	   DATA DB41,N32
-	   DATA EB41,N32
-	   DATA F41,N32
-	   DATA C41,N32
-	   DATA DB41,N32
-	   DATA EB41,N32
-	   DATA F41,N32
-	   DATA C41,N32
-	   DATA DB41,N32
-	   DATA EB41,N32
+       DATA C41,N8
+       DATA REST,N32    * Rest goes here
+       DATA C41,N32
+       DATA DB41,N32
+       DATA EB41,N32
+       DATA F41,N32
+       DATA C41,N32
+       DATA DB41,N32
+       DATA EB41,N32
+       DATA F41,N32
+       DATA C41,N32
+       DATA DB41,N32
+       DATA EB41,N32
+* Page 8
+       DATA F41,N32
+       DATA EB41,N32
+       DATA DB41,N32
+       DATA C41,N32
+       DATA F41,N32
+       DATA EB41,N32
+       DATA DB41,N32
+       DATA C41,N32
+       DATA F41,N32
+       DATA EB41,N32
+       DATA DB41,N32
+       DATA C41,N32
+       DATA F41,N32
+       DATA EB41,N32
+       DATA DB41,N32
+       DATA C41,N32
+
+       DATA F31,N32
+       DATA G31,N32
+       DATA AB31,N32
+       DATA BB31,N32
+       DATA C41,N32
+       DATA DB41,N32
+       DATA EB41,N32
+       DATA F41,N32
+       DATA F31,N32
+       DATA G31,N32
+       DATA AB31,N32
+       DATA BB31,N32
+       DATA C41,N32
+       DATA DB41,N32
+       DATA EB41,N32
+       DATA F41,N32
+*
+       DATA DB41,N8
+       DATA REST,N32
+       DATA BB31,N32
+       DATA C41,N32
+       DATA DB41,N32
+       DATA EB41,N32
+       DATA BB31,N32
+       DATA C41,N32
+       DATA DB41,N32
+       DATA EB41,N32
+       DATA BB31,N32
+       DATA C41,N32
+       DATA DB41,N32
+
+       DATA EB41,N32
+       DATA DB41,N32
+       DATA C41,N32
+       DATA BB31,N32
+       DATA EB41,N32
+       DATA DB41,N32
+       DATA C41,N32
+       DATA BB31,N32
+       DATA EB41,N32
+       DATA DB41,N32
+       DATA C41,N32
+       DATA BB31,N32
+       DATA EB41,N32
+       DATA DB41,N32
+       DATA C41,N32
+       DATA BB31,N32
+*
+       DATA EB31,N32
+       DATA F31,N32
+       DATA G31,N32
+       DATA AB31,N32
+       DATA BB32,N32
+       DATA C41,N32
+       DATA DB41,N32
+       DATA EB41,N32
+       DATA EB31,N32
+       DATA F31,N32
+       DATA G31,N32
+       DATA AB31,N32
+       DATA BB32,N32
+       DATA C41,N32
+       DATA DB41,N32
+       DATA EB41,N32
+       
+       DATA C41,N8
+       DATA REST,N32
+       DATA AB31,N32
+       DATA BB31,N32
+       DATA C31,N32
+       DATA DB31,N32
+       DATA AB31,N32
+       DATA BB31,N32
+       DATA C41,N32
+       DATA DB41,N32
+       DATA AB31,N32
+       DATA BB31,N32
+       DATA C41,N32
+*
+       DATA DB41,N32
+       DATA C41,N32
+       DATA BB31,N32
+       DATA AB31,N32
+       DATA DB41,N32
+       DATA C41,N32
+       DATA BB31,N32
+       DATA AB31,N32
+       DATA DB41,N32
+       DATA C41,N32
+       DATA BB31,N32
+       DATA AB31,N32
+       DATA DB41,N32
+       DATA C41,N32
+       DATA BB31,N32
+       DATA AB31,N32
+
+       DATA G31,N32
+       DATA BB31,N32
+       DATA AB31,N32
+       DATA G31,N32
+       DATA C41,N32
+       DATA BB31,N32
+       DATA AB31,N32
+       DATA G31,N32
+       DATA F31,N32
+       DATA AB31,N32
+       DATA G31,N32
+       DATA F31,N32
+       DATA BB31,N32
+       DATA AB31,N32
+       DATA G31,N32
+       DATA F31,N32
 *
        DATA C11,N2
 MEND1
@@ -185,29 +315,65 @@ MUSIC2 DATA F32,N16
        DATA DB22,N16
        DATA DB22,N16
        DATA DB22,N16
-* Swtich to part "Vlc."
+* Swtich to part "Vlc."  (Page 7)
        DATA C12,N16
-	   DATA C02,N16
-	   DATA C12,N16
-	   DATA C02,N16
+       DATA C02,N16
        DATA C12,N16
-	   DATA C02,N16
-	   DATA C12,N16
-	   DATA C02,N16
+       DATA C02,N16
+       DATA C12,N16
+       DATA C02,N16
+       DATA C12,N16
+       DATA C02,N16
 
-	   DATA F12,N8
-	   DATA F12,N8
-	   DATA E12,N8
-	   DATA E12,N8
+       DATA F12,N8
+       DATA F12,N8
+       DATA E12,N8
+       DATA E12,N8
 *
        DATA F12,N8
-	   DATA F12,N8
-	   DATA G12,N8
-	   DATA G12,N8
-	   DATA A12,N8
-	   DATA A12,N8
-	   DATA A12,N8
-	   DATA A12,N8
+       DATA F12,N8
+       DATA G12,N8
+       DATA G12,N8
+       DATA A12,N8
+       DATA A12,N8
+       DATA A12,N8
+       DATA A12,N8
+* Page 8
+       DATA AB12,N8
+       DATA AB12,N8
+       DATA AB12,N8
+       DATA AB12,N8
+       DATA AB12,N8
+       DATA AB12,N8
+       DATA AB12,N8
+       DATA AB12,N8
+*
+       DATA BB12,N8
+       DATA BB12,N8
+       DATA G12,N8
+       DATA G12,N8
+       DATA G12,N8
+       DATA G12,N8
+       DATA G12,N8
+       DATA G12,N8
+* Page 9
+       DATA G12,N8
+       DATA G12,N8
+       DATA G12,N8
+       DATA G12,N8
+       DATA AB12,N8
+       DATA AB12,N8
+       DATA F12,N8
+       DATA F12,N8
+*
+       DATA F12,N8
+       DATA F12,N8
+       DATA F12,N8
+       DATA F12,N8
+       DATA E12,N8
+       DATA EB12,N8
+       DATA D12,N8
+       DATA DB12,N8
 *
        DATA C32,N2
 MEND2

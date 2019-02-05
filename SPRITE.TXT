@@ -542,6 +542,7 @@ DRWMAP DECT R10
 * Store position of map in R9
        MOV  @SCRENB(2),R9
        A    R6,R9
+*        AI   R8 ,-260                 uncomment this line if you want to only draw 16 rows of background
 * Write one row of characters
 HSCRL
        MOVB *R9+,R1
