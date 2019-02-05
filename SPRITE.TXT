@@ -336,18 +336,33 @@ USRIPT DECT R10
        MOV  @MIDTIM,R0
        S    @KEYTM,R0
        JGT  USRRTN
-* Scan for left move
-       LI   R2,>0100
+* Scan for key
+       SETO R9
+       LI   R1,SCANJP
+SCANL1 MOV  *R1+,R2
        BL   @KYSCAN
-       CZC  @RWLEFT,R3
-       JEQ  MOVLFT
-* Scan for right move
-       LI   R2,>0200
-       BL   @KYSCAN
-       CZC  @RWRGHT,R3
-       JEQ  MOVRGT
+       CZC  *R1+,R3
+       JNE  SCANL2
+       CLR  R9
+       MOV  *R1,R2
+       B    *R2
+SCANL2 INCT R1
+       CI   R1,SCANJE
+       JNE  SCANL1
+* If no key was pressed, run the NOINPT routine
+       MOV  R9,R9
+       JNE  NOINPT
+* Specify time to wait before accepting another key press
+       MOV  @MIDTIM,@KEYTM
+       S    @KEYWT,@KEYTM
+* Note that the screen needs to be updated
+       CLR  @DRAWNW
+*
+USRRTN MOV  *R10+,R11
+       RT
+
 * Note if the screen needs to be updated
-       MOV  @HEROSL,R0
+NOINPT MOV  @HEROSL,R0
        JEQ  STILL1
        CLR  @DRAWNW
 * Note that the user isn't moving the hero
@@ -356,6 +371,7 @@ USRIPT DECT R10
 STILL1 MOV  @MIDTIM,@KEYTM
        MOV  @MIDTIM,@FLIPTM
        JMP  USRRTN
+
 * Note that the user is moving the hero left
 MOVLFT SETO @HERODR
        SETO @HEROSL
@@ -367,11 +383,12 @@ MOVLFT SETO @HERODR
 MLFT1  MOV  @HEROX,R0
        S    @MNOFST,R0
        C    @MAPX,R0
-       JLT  KEYNXT
+       JLT  SCANL2
        MOV  R0,@MAPX                 * Shift map, we move too far left
-       JGT  KEYNXT
+       JGT  SCANL2
        CLR  @MAPX                    * We shifted too far, we're close to the left edge of the map
-       JMP  KEYNXT
+       JMP  SCANL2
+
 * Note that the user is moving the hero right
 MOVRGT CLR  @HERODR
        SETO @HEROSL
@@ -387,25 +404,14 @@ MOVRGT CLR  @HERODR
 MRGHT1 MOV  @HEROX,R0
        S    @MXOFST,R0
        C    @MAPX,R0
-       JGT  KEYNXT
+       JGT  SCANL2
        MOV  R0,@MAPX                * Shift map, we moved too far right
        MOV  @MAPXT,R0
        SLA  R0,3
        C    R0,@MAPX
-       JHE  KEYNXT
+       JHE  SCANL2
        MOV  R0,@MAPX                * We shifted too far, we're close to the right edge of the map
-* Specify time to wait before accepting another key press
-KEYNXT MOV  @MIDTIM,@KEYTM
-       S    @KEYWT,@KEYTM
-* Note that the screen needs to be updated
-       CLR  @DRAWNW
-*
-USRRTN MOV  *R10+,R11
-       RT
-* Left keyboard row
-RWLEFT DATA >2000
-* Right keyboard row
-RWRGHT EQU  RWLEFT
+       JMP  SCANL2
 
 * Scan
 * R2 - keyboard column to scan (left-most byte)
@@ -418,6 +424,21 @@ KYSCAN LI   R12,>0024
        CLR  R3
        STCR R3,8
        RT
+
+* Left-button keyboard column and row
+CLLEFT EQU  >0100
+RWLEFT EQU  >2000
+* Right-button keyboard column and row
+CLRGHT EQU  >0200
+RWRGHT EQU  >2000
+* Fire-button keyboard column and row
+CLFIRE EQU  >0400
+RWFIRE EQU  >0400
+*
+* Keys to scan for and associated routine to jump to
+SCANJP DATA CLLEFT,RWLEFT,MOVLFT
+       DATA CLRGHT,RWRGHT,MOVRGT
+SCANJE DATA CLFIRE,RWFIRE,>0000
 
 *
 * If the timing is right,
@@ -453,14 +474,14 @@ PLYNOW DECT R10
        BL   @PLYM0
 *
        MOV  *R5,*R5
-	   JEQ  PLYW1
+       JEQ  PLYW1
 * Set timer for tone phase
        MOV  @MIDTIM,@BEATWT
-	   S    @BEAT,@BEATWT
-	   JMP  PLYMRT
+       S    @BEAT,@BEATWT
+       JMP  PLYMRT
 * Set timer for the silence phase
 PLYW1  MOV  @MIDTIM,@BEATWT
-	   S    @NTPAUS,@BEATWT
+       S    @NTPAUS,@BEATWT
 * Switch between tone phase and silence phase
 PLYMRT INV  *R5
 *
