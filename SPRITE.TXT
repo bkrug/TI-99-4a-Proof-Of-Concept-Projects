@@ -36,10 +36,14 @@ KEYTM  DATA >FFFF        When MIDTIM <= this value, it is okay to accept a key p
 ANIADR DATA HEROMV       Address of the next pair of hero characters to display in animation
 HERODR DATA 0            If 0, hero is facing right
 HEROSL DATA 0            If 0, hero is standing still
+HEROUP DATA >FFFF        If 0, hero is moving up without decelerating.
 DRAWNW DATA 0            If 0, Screen is out of date
 *
 MAPX   DATA 0            Current horizontal scroll amount for the map
 HEROX  DATA >60          Current x position of hero within the map
+HEROY  DATA >A000        Left-most byte is the current y position
+YSPEED DATA 0            The currenst vertical speed of the hero
+UPSTOP BSS  2            vertical speed must decelerate at this time
 *
 MAPWD  DATA 0            Width of current map
 MAPXT  DATA 0            Width of current map - 32 (screen width)
@@ -339,7 +343,8 @@ USRIPT DECT R10
        MOV  @MIDTIM,R0
        S    @KEYTM,R0
        JGT  USRRTN
-* Scan for key
+* Loop to scan for key presses
+* R9 records if at least one key was pressed
        SETO R9
        LI   R1,SCANJP
 SCANL1 MOV  *R1+,R2
@@ -418,14 +423,44 @@ LRUPT
        S    @KEYWT,@KEYTM
 * Note that the screen needs to be updated
        CLR  @DRAWNW
-	   JMP  SCANL2
+       JMP  SCANL2
+
+* Update Hero's y position
+MOVUP
+* routine is different if the user was already pressing up
+       MOV  @YSPEED,R0
+       JNE  MOVUP5
+* Set time at which hero must start decelerating
+       MOV  @MIDTIM,@UPSTOP
+       S    @MKEYWT,@UPSTOP
+* Set the initial YSPEED
+       LI   R0,>FE00
+       MOV  R0,@YSPEED
+* Must the hero start to decelerate now?
+MOVUP5 MOV  @MIDTIM,R0
+       S    @UPSTOP,R0
+       JGT  MOVUP6
+* Decelerate
+       LI   R0,33
+       A    R0,@YSPEED
+* Update HEROY.
+* If YSPEED is negative, hero will move up.
+MOVUP6 A    @YSPEED,@HEROY
+* If HERO reached ground reset stuff
+       LI   R0,>A000
+       C    @HEROY,R0
+       JL   LRUPT
+* Hero is done jumping
+       MOV  R0,@HEROY
+       CLR  @YSPEED
+       JMP  LRUPT
 
 * Enable/Disable music
 SWPMSC INV  @ENABLM
 * Specify time to wait before accepting another key press
        MOV  @MIDTIM,@KEYTM
        S    @MKEYWT,@KEYTM
-       JMP  SCANL2
+       B    @SCANL2
 
 * Scan
 * R2 - keyboard column to scan (left-most byte)
@@ -439,24 +474,13 @@ KYSCAN LI   R12,>0024
        STCR R3,8
        RT
 
-* Left-button keyboard column and row
-CLLEFT EQU  >0100
-RWLEFT EQU  >2000
-* Right-button keyboard column and row
-CLRGHT EQU  >0200
-RWRGHT EQU  >2000
-* Fire-button keyboard column and row
-CLFIRE EQU  >0400
-RWFIRE EQU  >0400
-* M-key keyboard column and row
-CLMKEY EQU  >0300
-RWMKEY EQU  >0100
-*
 * Keys to scan for and associated routine to jump to
-SCANJP DATA CLLEFT,RWLEFT,MOVLFT
-       DATA CLRGHT,RWRGHT,MOVRGT
-       DATA CLFIRE,RWFIRE,>0000
-       DATA CLMKEY,RWMKEY,SWPMSC
+* Every three words of memory represent:
+* Key column to scan, Key row to check, address to jump to.
+SCANJP DATA >0100,>2000,MOVLFT
+       DATA >0200,>2000,MOVRGT
+       DATA >0400,>0400,MOVUP
+       DATA >0300,>0100,SWPMSC
 SCANJE
 
 *
@@ -757,12 +781,19 @@ HEROVD DECT R10
        DECT R10
        MOV  R1,*R10
 * Select which page of the sprite attribute list we plan to write to
-       LI   R0,SPRPG1+1
+       LI   R0,SPRPG1
        MOV  @NEXTPG,@NEXTPG
        JLT  PK2
-       LI   R0,SPRPG2+1
-* Respecify hero location
-PK2    MOV  @HEROX,R1
+       LI   R0,SPRPG2
+* Respecify hero Y location
+PK2    MOVB @HEROY,R1
+       BL   @VSBW
+       AI   R0,4
+       AI   R1,>1000
+       BL   @VSBW
+* Respecify hero X location
+       AI   R0,-3
+       MOV  @HEROX,R1
        S    @MAPX,R1
        SWPB R1
        BL   @VSBW
