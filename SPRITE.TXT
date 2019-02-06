@@ -37,6 +37,7 @@ ANIADR DATA HEROMV       Address of the next pair of hero characters to display 
 HERODR DATA 0            If 0, hero is facing right
 HEROSL DATA 0            If 0, hero is standing still
 HEROUP DATA >FFFF        If 0, hero is moving up without decelerating.
+UPPRES DATA >FFFF        If 0, player has just pressed jump button
 DRAWNW DATA 0            If 0, Screen is out of date
 *
 MAPX   DATA 0            Current horizontal scroll amount for the map
@@ -148,6 +149,7 @@ GAMELP
        BL   @TRCKTM
 * Process user input
        BL   @USRIPT
+       BL   @UPTHRO
 *
        BL   @PLYMSC
 *
@@ -425,34 +427,7 @@ LRUPT
        CLR  @DRAWNW
        JMP  SCANL2
 
-* Update Hero's y position
-MOVUP
-* routine is different if the user was already pressing up
-       MOV  @YSPEED,R0
-       JNE  MOVUP5
-* Set time at which hero must start decelerating
-       MOV  @MIDTIM,@UPSTOP
-       S    @MKEYWT,@UPSTOP
-* Set the initial YSPEED
-       LI   R0,>FE00
-       MOV  R0,@YSPEED
-* Must the hero start to decelerate now?
-MOVUP5 MOV  @MIDTIM,R0
-       S    @UPSTOP,R0
-       JGT  MOVUP6
-* Decelerate
-       LI   R0,33
-       A    R0,@YSPEED
-* Update HEROY.
-* If YSPEED is negative, hero will move up.
-MOVUP6 A    @YSPEED,@HEROY
-* If HERO reached ground reset stuff
-       LI   R0,>A000
-       C    @HEROY,R0
-       JL   LRUPT
-* Hero is done jumping
-       MOV  R0,@HEROY
-       CLR  @YSPEED
+MOVUP  CLR  @UPPRES
        JMP  LRUPT
 
 * Enable/Disable music
@@ -482,6 +457,51 @@ SCANJP DATA >0100,>2000,MOVLFT
        DATA >0400,>0400,MOVUP
        DATA >0300,>0100,SWPMSC
 SCANJE
+
+*
+* Update the hero's position.
+*
+UPTHRO
+* If hero is in the middle of a jump continue the jump
+UPTUP  MOV  @HEROUP,R0
+       JEQ  UPTUP1
+* If player just pressed jump, start a new jump
+       MOV  @UPPRES,R0
+       JNE  UPDTRT
+* Update flag since jump is starting
+       CLR  @HEROUP
+* Set time at which hero must start decelerating
+       LI   R0,200
+       MOV  @MIDTIM,@UPSTOP
+       S    R0,@UPSTOP
+* Set the initial YSPEED
+       LI   R0,>FD00
+       MOV  R0,@YSPEED
+* If the user is not still pressing up, the hero must decelerate
+UPTUP1 MOV  @UPPRES,R0
+       JNE  UPTUP2
+* If the user presses up for too long, the hero must decelerate
+       MOV  @MIDTIM,R0
+       S    @UPSTOP,R0
+       JGT  UPTUP3
+* Decelerate
+UPTUP2 LI   R0,>30
+       A    R0,@YSPEED
+* Update HEROY.
+* If YSPEED is negative, hero will move up.
+UPTUP3 A    @YSPEED,@HEROY
+* Unset the "jump-key-just-pressed" flag
+       SETO @UPPRES
+* Specify that the screen should be refreshed
+       CLR  @DRAWNW
+* If HERO reached ground reset stuff
+       LI   R0,>A000
+       C    @HEROY,R0
+       JL   UPDTRT
+* Hero is done jumping
+       MOV  R0,@HEROY
+       SETO @HEROUP
+UPDTRT RT
 
 *
 * If the timing is right,
