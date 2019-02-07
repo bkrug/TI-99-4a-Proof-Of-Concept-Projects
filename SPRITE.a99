@@ -61,9 +61,10 @@ MINSCL BSS  1            Minimum scrollable character
        EVEN
 
        AORG >83F0
-STACK  BES  >10
+       BSS  >10
+STACK
 
-       RORG
+       RORG 0
 *
 * End of Editable values
 *
