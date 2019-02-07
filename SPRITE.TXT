@@ -495,89 +495,119 @@ UPTUP1 MOV  @UPPRES,R0
 UPTUP2 LI   R0,>30
        A    R0,@YSPEED
 UPTUP3
-* Prevent the hero from jumping up through a ceiling.
-* The below routine will reset the Y position for us, if a collision would have occurred.
-       BL   @UPTHZ
-       JEQ  UPTUP4
+* Find minimum/maximum Y positions. Place in R14,R15
+       BL   @MXMNY
 * Update HEROY.
 * If YSPEED is negative, hero will move up.
        A    @YSPEED,@HEROY
+* Check if new Y position is lower number than minimum
+       C    @HEROY,R14
+       JHE  UPTUP5
+       MOV  R14,@HEROY
+       CLR  @YSPEED
+       JMP  UPTUP4
+* Check if new Y position is higher number than maximum
+UPTUP5 C    @HEROY,R15
+       JLE  UPTUP4
+       MOV  R15,@HEROY
+       CLR  @YSPEED
+* Hero is done jumping
+       SETO @HEROUP
 * Unset the "jump-key-just-pressed" flag
 UPTUP4 SETO @UPPRES
 * Specify that the screen should be refreshed
        CLR  @DRAWNW
 * If HERO reached ground reset stuff
-       LI   R0,>8800
-       C    @HEROY,R0
-       JL   UPDTRT
+*       LI   R0,>8800
+*       C    @HEROY,R0
+*       JL   UPDTRT
 * Hero is done jumping
-       MOV  R0,@HEROY
-       SETO @HEROUP
+*       MOV  R0,@HEROY
+*       SETO @HEROUP
 *
 UPDTRT MOV  *R10+,R11
        RT
 
-* Look for horizontal platform collisions
-* If the hero would jump up into a horizontal platform,
-* Correct position and change YSPEED to zero.
-* R9 - must contain the map position
+* Get Max & Min Y-locations
 *
 * R4 - hero's X position / 8 (character position instead of pixel position)
-* R5 - hero's Y position / 8
-* R6 - hero's Y position after update / 8
-UPTHZ  MOV  @HEROX,R4
+* R5 - hero's head's Y position / 8
+* R6 - hero's foot's Y position / 8
+MXMNY  MOV  @HEROX,R4
        SRL  R4,3
        MOV  @HEROY,R5
-       MOV  R5,R6
-       A    @YSPEED,R6
        SRL  R5,11
-       SRL  R6,11
+       MOV  R5,R6
+       AI   R6,3
 * There is a list of pointers within the map
 * Each pointer points to horizontal platform data for a partiuclar map row
 * R7 - address of the current pointer
 * R8 - address after the end of the list of pointers
        MOV  @HORIZB(9),R7
        MOV  @HORIZD(9),R8
-* R3 - Address of the hortizontal platform data
-UPTHZ1 MOV  *R7,R3
-* If the row of the platform data is >= R6 or <= R5, check for collision
-       C    *R3,R6
-       JL   UPTHZ5
-       C    *R3+,R5
-       JH   UPTHZ5
+* Is the row below or at the hero's foot?
+       DECT R7
+MXMNY1 INCT R7
+       MOV  *R7,R3
+       C    *R3+,R6
+       JL   MXMNY1
+* If yes, look for platform underneath hero
 * R2 - Number of platforms in the current map row
        MOV  *R3+,R2
 * The next two words contain the first and last map column for a platform within the map row
 * Check if the hero's X position falls within the X positions of a platform
-UPTHZ2 MOV  *R3+,R1
-       C    R1,R4
-       JH   UPTHZ3
-       MOV  *R3+,R1
-       C    R1,R4
-       JL   UPTHZ4
-* If the answer is yes, set HEROY to be located just below the platform that would otherwise have had a colision.
+MXMNY2 C    *R3+,R4
+       JH   MXMNY3
+       C    *R3+,R4
+       JL   MXMNY4
+* If the answer is yes, we found the maximum Y position.
        MOV  *R7,R3
-       MOV  *R3,R6
-       INC  R6
-       SLA  R6,11
-       MOV  R6,@HEROY
-* Vertical speed should now be zero. Hero may decelerate from here.
-       CLR  @YSPEED
-* Set Equal status bit to imply that Y position has already been updated
-       C    R6,R6
+       MOV  *R3,R15
+       AI   R15,-3
+       SLA  R15,11
+       JMP  MXMNY5
+* Point R3 to the next pair of words representing a platform's position
+MXMNY3 INCT R3
+* Check if there are any more platform positions in this map row
+MXMNY4 DEC  R2
+       JNE  MXMNY2
+       JMP  MXMNY1
+*
+* Look for a row above the hero's head
+MXMNY5 MOV  @HORIZB(9),R7
+MXMNY6 DECT R8
+       MOV  *R8,R3
+       C    *R3+,R5
+       JL   MXMNY7
+       C    R8,R7
+       JH   MXMNY6
+* Set minimum Y position to 0
+       CLR  R14
+       RT
+* R2 - Number of platforms in the current map row
+MXMNY7 MOV  *R3+,R2
+* The next two words contain the first and last map column for a platform within the map row
+* Check if the hero's X position falls within the X positions of a platform
+MXMNY8 C    *R3+,R4
+       JH   MXMNY9
+       C    *R3+,R4
+       JL   MXMNYA
+* If the answer is yes we found the minimum Y position
+       MOV  *R8,R3
+       MOV  *R3,R14
+       INC  R14
+       SLA  R14,11
        RT
 * Point R3 to the next pair of words representing a platform's position
-UPTHZ3 INCT R3
+MXMNY9 INCT R3
 * Check if there are any more platform positions in this map row
-UPTHZ4 DEC  R2
-       JNE  UPTHZ2
-* Check if there are any more map rows to look for collisions.
-UPTHZ5 INCT R7
-       C    *R7,*R8
-       JL   UPTHZ1
-* There were no platform colisions
-* Reset equal status bit to imply that Y position has not been updated
-       MOV  R7,R7
+MXMNYA DEC  R2
+       JNE  MXMNY8
+* Look at next row of horiztonal platforms if there is one
+       C    R8,R7
+       JH   MXMNY6
+* Set minimum Y position to 0
+       CLR  R14
        RT
 
 *
