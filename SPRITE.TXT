@@ -42,7 +42,7 @@ DRAWNW DATA 0            If 0, Screen is out of date
 *
 MAPX   DATA 0            Current horizontal scroll amount for the map
 HEROX  DATA >60          Current x position of hero within the map
-HEROY  DATA >A000        Left-most byte is the current y position
+HEROY  DATA >8800        Left-most byte is the current y position
 YSPEED DATA 0            The currenst vertical speed of the hero
 UPSTOP BSS  2            vertical speed must decelerate at this time
 *
@@ -149,6 +149,8 @@ GAMELP
        BL   @TRCKTM
 * Process user input
        BL   @USRIPT
+* Update hero position
+       LI   R9,MP01HD
        BL   @UPTHRO
 *
        BL   @PLYMSC
@@ -252,6 +254,9 @@ PATRNG EQU  16
 SCRENB EQU  18
 SCREND EQU  20
 SCRENG EQU  22
+HORIZB EQU  24
+HORIZD EQU  26
+HORIZG EQU  28
 INTMAP DECT R10
        MOV  R11,*R10
 * Record map width values
@@ -461,7 +466,9 @@ SCANJE
 *
 * Update the hero's position.
 *
-UPTHRO
+* R9 - must contain the map position
+UPTHRO DECT R10
+       MOV  R11,*R10
 * If hero is in the middle of a jump continue the jump
 UPTUP  MOV  @HEROUP,R0
        JEQ  UPTUP1
@@ -487,21 +494,91 @@ UPTUP1 MOV  @UPPRES,R0
 * Decelerate
 UPTUP2 LI   R0,>30
        A    R0,@YSPEED
+UPTUP3
+* Prevent the hero from jumping up through a ceiling.
+* The below routine will reset the Y position for us, if a collision would have occurred.
+       BL   @UPTHZ
+       JEQ  UPTUP4
 * Update HEROY.
 * If YSPEED is negative, hero will move up.
-UPTUP3 A    @YSPEED,@HEROY
+       A    @YSPEED,@HEROY
 * Unset the "jump-key-just-pressed" flag
-       SETO @UPPRES
+UPTUP4 SETO @UPPRES
 * Specify that the screen should be refreshed
        CLR  @DRAWNW
 * If HERO reached ground reset stuff
-       LI   R0,>A000
+       LI   R0,>8800
        C    @HEROY,R0
        JL   UPDTRT
 * Hero is done jumping
        MOV  R0,@HEROY
        SETO @HEROUP
-UPDTRT RT
+*
+UPDTRT MOV  *R10+,R11
+       RT
+
+* Look for horizontal platform collisions
+* If the hero would jump up into a horizontal platform,
+* Correct position and change YSPEED to zero.
+* R9 - must contain the map position
+*
+* R4 - hero's X position / 8 (character position instead of pixel position)
+* R5 - hero's Y position / 8
+* R6 - hero's Y position after update / 8
+UPTHZ  MOV  @HEROX,R4
+       SRL  R4,3
+       MOV  @HEROY,R5
+       MOV  R5,R6
+       A    @YSPEED,R6
+       SRL  R5,11
+       SRL  R6,11
+* There is a list of pointers within the map
+* Each pointer points to horizontal platform data for a partiuclar map row
+* R7 - address of the current pointer
+* R8 - address after the end of the list of pointers
+       MOV  @HORIZB(9),R7
+       MOV  @HORIZD(9),R8
+* R3 - Address of the hortizontal platform data
+UPTHZ1 MOV  *R7,R3
+* If the row of the platform data is >= R6 or <= R5, check for collision
+       C    *R3,R6
+       JL   UPTHZ5
+       C    *R3+,R5
+       JH   UPTHZ5
+* R2 - Number of platforms in the current map row
+       MOV  *R3+,R2
+* The next two words contain the first and last map column for a platform within the map row
+* Check if the hero's X position falls within the X positions of a platform
+UPTHZ2 MOV  *R3+,R1
+       C    R1,R4
+       JH   UPTHZ3
+       MOV  *R3+,R1
+       C    R1,R4
+       JL   UPTHZ4
+* If the answer is yes, set HEROY to be located just below the platform that would otherwise have had a colision.
+       MOV  *R7,R3
+       MOV  *R3,R6
+       INC  R6
+       SLA  R6,11
+       MOV  R6,@HEROY
+* Vertical speed should now be zero. Hero may decelerate from here.
+       CLR  @YSPEED
+* Set Equal status bit to imply that Y position has already been updated
+       C    R6,R6
+       RT
+* Point R3 to the next pair of words representing a platform's position
+UPTHZ3 INCT R3
+* Check if there are any more platform positions in this map row
+UPTHZ4 DEC  R2
+       JNE  UPTHZ2
+* Check if there are any more map rows to look for collisions.
+UPTHZ5 INCT R7
+       C    *R7,*R8
+       JL   UPTHZ1
+* There were no platform colisions
+* Reset equal status bit to imply that Y position has not been updated
+       MOV  R7,R7
+       RT
 
 *
 * If the timing is right,
@@ -807,6 +884,7 @@ HEROVD DECT R10
        LI   R0,SPRPG2
 * Respecify hero Y location
 PK2    MOVB @HEROY,R1
+       AI   R1,>1800                    * Move the sprite downards by three positions because the map is offset by that much
        BL   @VSBW
        AI   R0,4
        AI   R1,>1000
