@@ -244,7 +244,45 @@ MD0    DATA >F0D0,>D8E0,>F0D0,>D8E0    ;
 MP01RD
 MP01RG EQU  MP01RD-MP01RW
 *
-MP01ZZ DATA HLINE1,HLINE2,HLINE3
+MP01ZZ DATA >0000,>0000,>0000,>0000    ;
+       DATA >0000,>0000,>0000,>0000    ;
+       DATA >0000,>0000,>0000,>0000    ;
+       DATA >0000,>0000,>0000,>0000    ;
+       DATA >0000,>0000,>0000,>0000    ;
+       DATA >0000,>0000,>0000,>0000    ;
+       DATA >0000,>0000                ;
+*
+       DATA >0000,>FFFF,>FFFF,>FFFF    ;
+       DATA >FF00,>0000,>0000,>0000    ;
+       DATA >FFFF,>FFFF,>FFFF,>FF00    ;
+       DATA >0000,>0000,>00FF,>FFFF    ;
+       DATA >FFFF,>FFFF,>FF00,>0000    ;
+       DATA >0000,>0080,>FFFF,>FFFF    ;
+       DATA >FFFF,>FF00                ;
+*
+       DATA >0000,>0000,>0000,>0000    ;
+       DATA >0000,>0000,>0000,>0000    ;
+       DATA >0000,>0000,>0000,>0000    ;
+       DATA >0000,>0000,>0000,>0000    ;
+       DATA >0000,>0000,>0000,>0000    ;
+       DATA >0000,>0000,>0000,>0000    ;
+       DATA >0000,>0000                ;
+*
+       DATA >0000,>FFFF,>FFFF,>FFFF    ;
+       DATA >FF00,>0000,>0000,>0000    ;
+       DATA >FFFF,>FFFF,>FFFF,>FF00    ;
+       DATA >0000,>0000,>00FF,>FFFF    ;
+       DATA >FFFF,>FFFF,>FF00,>0000    ;
+       DATA >0000,>0080,>FFFF,>FFFF    ;
+       DATA >FFFF,>FF00                ;
+*
+       DATA >0000,>0000,>0000,>0000    ;
+       DATA >0000,>0000,>0000,>0000    ;
+       DATA >0000,>0000,>0000,>0000    ;
+       DATA >0000,>0000,>00FF,>0000    ;
+       DATA >0000,>0000,>0000,>0000    ;
+       DATA >0000,>0000,>0000,>0000    ;
+       DATA >0000,>0000                ;
 MP01ZD
 MP01ZG EQU  MP01ZD-MP01ZZ
 HLINE1 DATA 13,4,2,8,16,22,30,36,44,50

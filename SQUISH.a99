@@ -1,0 +1,1183 @@
+       DEF  RUNTST
+       REF  SPR0,SPREND,SPRLEN
+       REF  MP02HD
+       REF  MUSIC1,MEND1,MUSIC2,MEND2,REST
+
+* A program to test shifting the screen left and right
+* This scroll method involves defining grops of 8 characters
+* Each character in the group is pixel-shifted by one
+* relative to the earlier character.
+*
+* Use this file together with HSCROLLDAT and FIXEDDAT
+
+*
+* Editable values
+*
+       AORG >8300
+
+LOCLWS BSS  >20          Local Workspace
+* 8 Bytes that get overwritten between loading and running the program
+* you can still use this space if you wait until the program is running to initialize it.
+PATT00 DATA >F1F2,>F3F4,>F5F6,>F7F8
+
+*
+* Data used for page flips
+*
+NEXTPG DATA 1            Next page to flip to. -1 implies page 1. +1 implies page 2.
+
+* Timer stuff
+TIMER  DATA >FFFF        Decrements once every 349.2 ms.
+       DATA >FFFC        Leftmost 14-bits decrement once every 21.3 microseconds.
+MIDTIM DATA >FFFF        Decrements once every 1.363 ms.
+*                        Holds the same value as the word at TIMER+1.
+
+FLIPTM DATA >FFFF        When MIDTIM <= this value, go to next animation frame
+KEYTM  DATA >FFFF        When MIDTIM <= this value, it is okay to accept a key press
+ANIADR DATA HEROMV       Address of the next pair of hero characters to display in animation
+HERODR DATA 0            If 0, hero is facing right
+HEROSL DATA 0            If 0, hero is standing still
+HEROUP DATA >FFFF        If 0, hero is moving up without decelerating.
+UPPRES DATA >FFFF        If 0, player has just pressed jump button
+DRAWNW DATA 0            If 0, Screen is out of date
+*
+MAPX   DATA 0            Current horizontal scroll amount for the map
+HEROX  DATA >60          Current x position of hero within the map
+HEROY  DATA >7000        Left-most byte is the current y position
+YSPEED DATA 0            The currenst vertical speed of the hero
+UPSTOP BSS  2            vertical speed must decelerate at this time
+*
+MAPWD  DATA 0            Width of current map
+MAPXT  DATA 0            Width of current map - 32 (screen width)
+*
+ENABLM BSS  2            If = 0, music is enabled
+MSC1PS BSS  2            Current position in tone generator 1's music data
+MSC2PS BSS  2            Current position in tone generator 2's music data
+BEATWT BSS  2            When MIDTIM <= this value, play next beat or pause between beats
+M1BEAT BSS  2            Number of remaining beats for the tone in generator 1
+M2BEAT BSS  2            Number of remaining beats for the tone in generator 2
+SILNC1 BSS  2            If = 0, play silence next. Else play tone next (generator 1)
+*
+MINSCL BSS  1            Minimum scrollable character
+       EVEN
+
+       AORG >83F0
+       BSS  >10
+STACK
+
+       RORG 0
+*
+* End of Editable values
+*
+
+RUNTST B    @RUN
+
+* CPU RAM Addresses
+USRISR EQU  >83C4        Address defining address of interupt routine
+REG1CP EQU  >83D4        Address holding a copy of VDP Register 1
+VDPWA  EQU  >8C02        VDP RAM write address
+VDPRD  EQU  >8800        VDP RAM read data
+VDPWD  EQU  >8C00        VDP RAM write data
+VDPSTA EQU  >8802        VDP RAM status
+* VDP RAM Addresses
+SCNPG1 EQU  >0           Address of Page 1 of the screen image table
+SCNPG2 EQU  >400         Address of Page 2 of the screen image table
+CLRTBL EQU  >380         Address of Color Table
+SPRPG1 EQU  >700         Address of Page 1 of the sprite attribute list
+SPRPG2 EQU  >780         Address of Page 2 of the sprite attribute list
+PTNPG1 EQU  >800         Address of Character Pattern Table 1
+*PTNPG2 EQU  >1000        Address of Character Pattern Table 2
+SPRTBL EQU  >1800        Address of Sprite Pattern Table
+
+VDPR1  DATA >01E2        Initial value of VDP register 1 (Set sprite type)
+VDPR2A DATA >0200        Initial value of VDP register 2 (page 1 of screen image table)
+VDPR2B DATA >0201        Secndry value of VDP register 2 (page 2 of screen image table)
+VDPR4  DATA >0401        Initial value of VDP register 4 (Pattern Descriptor Table)
+VDPR5A DATA >050E        Initial value of VDP register 5 (page 1 of sprite attribute list)
+VDPR5B DATA >050F        Secndry value of VDP register 5 (page 2 of sprite attribute list)
+VDPR6  DATA >0603        Initial value of VDP register 6 (Sprite Descriptor Table)
+VDPR7  DATA >0701        Initial value of VDP register 7 (background color)
+
+HEROWT DATA 20           Amount of time to wait between hero animation frames
+KEYWT  DATA 8            Amount of time to wait between accepting key presses
+MKEYWT DATA 400          Amount of time to wait betewen accepting M-key presses
+
+MXOFST DATA >70          The hero's right-most offset should not exceed this value accept at the right-edge of the map.
+MNOFST DATA >60          The hero's left-most offset should not drop below this value accept at the left-edge of the map.
+
+* Initial contents of sprite attribute table
+SPRATT DATA >A070,>0002
+       DATA >B070,>0402
+       DATA >D000
+
+* Codes for character moving right.
+HEROMV BYTE >00,>04
+       BYTE >00,>04
+       BYTE >00,>04
+       BYTE >08,>0C
+       BYTE >08,>0C
+       BYTE >10,>14
+       BYTE >10,>14
+       BYTE >10,>14
+       BYTE >18,>1C
+       BYTE >18,>1C
+HEROED
+* Codes for character standing still looking right.
+HEROST BYTE >20,>24
+*
+BYTE01 BYTE >01
+BYTEFF BYTE >FF
+SPACE  BYTE >20
+       EVEN
+
+RUN    LWPI LOCLWS
+       LI   R0,MUSIC1
+       MOV  R0,@MSC1PS
+       LI   R0,MUSIC2
+       MOV  R0,@MSC2PS
+       SETO @BEATWT
+       CLR  @M1BEAT
+       CLR  @M2BEAT
+       SETO @SILNC1
+       CLR  @ENABLM
+* Initialize Stack
+       LI   R10,STACK
+* Initialize Game
+       BL   @INTGAM
+       BL   @INTSPR
+       LI   R9,MP02HD
+       BL   @INTMAP
+GAMELP 
+* Update timer
+       BL   @TRCKTM
+* Process user input
+       BL   @USRIPT
+* Update hero position
+       LI   R9,MP02HD
+*       BL   @UPTHRO
+*
+       BL   @PLYMSC
+*
+       MOV  @DRAWNW,R0
+       JNE  GAMELP
+       SETO @DRAWNW
+*
+       LI   R0,>C0
+       LI   R2,MP02HD
+       BL   @DRWMAP
+* Redraw hero sprite
+       BL   @HEROSP
+*
+       JMP  GAMELP
+
+
+*
+* Initialize game
+*
+INTGAM DECT R10
+       MOV  R11,*R10
+*
+       MOVB @VDPR1+1,@REG1CP
+       MOV  @VDPR1,R0
+       BL   @VWTR
+       MOV  @VDPR2A,R0
+       BL   @VWTR
+       MOV  @VDPR4,R0
+       BL   @VWTR
+       MOV  @VDPR5A,R0
+       BL   @VWTR
+       MOV  @VDPR6,R0
+       BL   @VWTR
+       MOV  @VDPR7,R0
+       BL   @VWTR
+* Color table
+       LI   R0,CLRTBL
+       LI   R1,>E100
+       BL   @VSBW
+       LI   R0,CLRTBL+4
+       LI   R1,>1000
+       BL   @VSBW
+* Clear Screen for page 1
+       LI   R0,SCNPG1
+       LI   R1,>2000
+INTG1  BL   @VSBW
+       INC  R0
+       CI   R0,SCNPG1+>300
+       JL   INTG1
+* Clear Screen for page 2
+       LI   R0,SCNPG2
+       LI   R1,>2000
+INTG2  BL   @VSBW
+       INC  R0
+       CI   R0,SCNPG2+>300
+       JL   INTG2
+* Place >00 on all of rows 3-5 and 21-24
+       LI   R0,SCNPG1+>60
+       CLR  R1
+INTG3  BL   @VSBW
+       INC  R0
+       CI   R0,SCNPG1+>C0
+       JL   INTG3
+*
+       LI   R0,SCNPG2+>60
+INTG4  BL   @VSBW
+       INC  R0
+       CI   R0,SCNPG2+>C0
+       JL   INTG4
+* Place >00 on all of rows 3-5 and 21-24
+       LI   R0,SCNPG1+>280
+       CLR  R1
+INTG5  BL   @VSBW
+       INC  R0
+       CI   R0,SCNPG1+>300
+       JL   INTG5
+*
+       LI   R0,SCNPG2+>280
+INTG6  BL   @VSBW
+       INC  R0
+       CI   R0,SCNPG2+>300
+       JL   INTG6
+* Initialize Timer
+       CLR  R12         CRU base of the TMS9901 
+       SBO  0           Enter timer mode 
+       LI   R1,>3FFF    Maximum value
+       INCT R12         Address of bit 1 
+       LDCR R1,14       Load value 
+       DECT R12
+       SBZ  0           Exit clock mode, start decrementer 
+*
+       MOV  *R10+,R11
+       RT
+
+*
+* Initialize Sprite Patterns
+*
+INTSPR DECT R10
+       MOV  R11,*R10
+* Record sprite values
+       LI   R0,SPRTBL
+       LI   R1,SPR0
+       LI   R2,SPRLEN
+       BL   @VMBW
+* Record initial sprite attributes
+       LI   R0,SPRPG1
+       LI   R1,SPRATT
+       LI   R2,9
+       BL   @VMBW
+       LI   R0,SPRPG2
+       BL   @VMBW
+*
+       MOV  *R10+,R11
+       RT
+
+*
+* Initialize Map
+*
+* R9 - Address of map header
+MAPCOL EQU  0
+MAPROW EQU  2
+MAPSIZ EQU  4
+COLORB EQU  6
+COLORD EQU  8
+COLORG EQU  10
+PATRNB EQU  12
+PATRND EQU  14
+PATRNG EQU  16
+SCRENB EQU  18
+SCREND EQU  20
+SCRENG EQU  22
+HORIZB EQU  24
+HORIZD EQU  26
+HORIZG EQU  28
+ACCRDB EQU  24
+ACCRDD EQU  26
+ACCRDG EQU  28
+SNIPTB EQU  30
+SNIPTD EQU  32
+SNIPTG EQU  34
+INTMAP DECT R10
+       MOV  R11,*R10
+* Record map width values
+       MOV  *R9,R0
+       MOV  R0,@MAPWD
+       AI   R0,-32
+       MOV  R0,@MAPXT
+* Record minimum scrollable character
+       MOV  @PATRNB(9),R0
+       MOV  *R0,R0
+       SWPB R0
+       MOVB R0,@MINSCL
+* Write color definitions
+       SRL  R0,11                  Find value of minimum scrollable character / 8
+       AI   R0,CLRTBL
+       MOV  @COLORB(9),R1         * >A8C0
+       MOV  @COLORG(9),R2         * >14
+       BL   @VMBW
+* Write character patterns from value MINSCL (some ASCII code)
+* We taking two character patterns and creating a set of 8 patterns
+* Each pattern in the set is pixel-shifted one pixel relative to the previous pattern
+*
+* Specify starting address in VDPRAM
+       MOVB @MINSCL,R3
+       SRL  R3,8
+       SLA  R3,3
+       AI   R3,PTNPG1                R3 = first char code * 8 + pattern table address
+       SZC  @BIT0,R3                 Set most signfication bit for writing
+       SOC  @BIT1,R3                 Set second most signfication bit for writing
+       SWPB R3
+       MOVB R3,@VDPWA
+       SWPB R3
+       MOVB R3,@VDPWA
+* Set R4 to the address of the first character pattern
+       MOV  @PATRNB(9),R4
+       INCT R4
+* Set R5 to the address of the left-most of two patterns
+* Set R4 to the address of the right-most of two patterns
+* Set R0 to the amount that the pattern should be shifted by
+INTMP2 MOV  R4,R5
+       AI   R4,>8
+       CLR  R0
+* Write the pixel-shifted value to VDP RAM
+INTMP3 MOVB @8(5),R7
+       SWPB R7
+       MOVB *R5+,R7
+       MOV  R0,R0
+       JEQ  INTMP4                      Don't shift if R0 contains 0.
+       SLA  R7,0
+INTMP4 MOVB R7,@VDPWD
+* Repeat 8 times
+       C    R5,R4
+       JL   INTMP3
+* Repeat the process for the same pair of characters, but shift by one more pixel
+       AI   R5,-8
+       INC  R0
+       CI   R0,8
+       JL   INTMP3
+* Repeat the process for a different pair of characters
+       AI   R4,8
+* Repeat unless we've reached the end of the pattern data
+       C    R4,@PATRND(9)
+       JL   INTMP2
+*
+       MOV  *R10+,R11
+       RT
+
+*
+* Track Time
+*
+TRCKTM CLR  R12 
+       SBO  0           Enter timer mode 
+       STCR R2,15       Read current value (plus mode bit)
+       SBZ  0
+       SRL  R2,1        Get rid of mode bit
+       SLA  R2,2
+       C    R2,@TIMER+2
+       JL   TRCK1
+       DEC  @TIMER
+TRCK1  MOV  R2,@TIMER+2
+       MOVB @TIMER+1,@MIDTIM
+       MOVB @TIMER+2,@MIDTIM+1
+       RT
+
+*
+* Scan for user input
+*
+USRIPT DECT R10
+       MOV  R11,*R10
+* If user pressed key recently, return to caller
+       MOV  @MIDTIM,R0
+       S    @KEYTM,R0
+       JGT  USRRTN
+* Loop to scan for key presses
+* R9 records if at least one key was pressed
+       SETO R9
+       LI   R1,SCANJP
+SCANL1 MOV  *R1+,R2
+       BL   @KYSCAN
+       CZC  *R1+,R3
+       JNE  SCANL2
+       CLR  R9
+       MOV  *R1,R2
+       B    *R2
+SCANL2 INCT R1
+       CI   R1,SCANJE
+       JNE  SCANL1
+* If no key was pressed, run the NOINPT routine
+       MOV  R9,R9
+       JNE  NOINPT
+*
+USRRTN MOV  *R10+,R11
+       RT
+
+* Note if the screen needs to be updated
+NOINPT MOV  @HEROSL,R0
+       JEQ  STILL1
+       CLR  @DRAWNW
+* Note that the user isn't moving the hero
+       CLR  @HEROSL
+* No key was pressed. Accept another key right away. Prevent timer cycling bug.
+STILL1 MOV  @MIDTIM,@KEYTM
+       MOV  @MIDTIM,@FLIPTM
+       JMP  USRRTN
+
+* Note that the user is moving the hero left
+MOVLFT SETO @HERODR
+       SETO @HEROSL
+       DEC  @HEROX
+* Don't let HEROX drop belwo zero
+       JGT  MLFT1
+       CLR  @HEROX
+* Adjust map position if necessary
+MLFT1  MOV  @HEROX,R0
+       S    @MNOFST,R0
+       C    @MAPX,R0
+       JLT  LRUPT
+       MOV  R0,@MAPX                 * Shift map, we move too far left
+       JGT  LRUPT
+       CLR  @MAPX                    * We shifted too far, we're close to the left edge of the map
+       JMP  LRUPT
+
+* Note that the user is moving the hero right
+MOVRGT CLR  @HERODR
+       SETO @HEROSL
+       INC  @HEROX
+* Don't let HEROX go off right edge of map
+       MOV  @MAPWD,R0
+       SLA  R0,3
+       AI   R0,-16
+       C    R0,@HEROX
+       JHE  MRGHT1
+       MOV  R0,@HEROX
+* Adjust map position if necessary
+MRGHT1 MOV  @HEROX,R0
+       S    @MXOFST,R0
+       C    @MAPX,R0
+       JGT  LRUPT
+       MOV  R0,@MAPX                * Shift map, we moved too far right
+       MOV  @MAPXT,R0
+       SLA  R0,3
+       C    R0,@MAPX
+       JHE  LRUPT
+       MOV  R0,@MAPX                * We shifted too far, we're close to the right edge of the map
+       JMP  LRUPT
+
+* Do the following updates if a move key was pressed.
+LRUPT
+* Specify time to wait before accepting another key press
+       MOV  @MIDTIM,@KEYTM
+       S    @KEYWT,@KEYTM
+* Note that the screen needs to be updated
+       CLR  @DRAWNW
+       JMP  SCANL2
+
+MOVUP  CLR  @UPPRES
+       JMP  LRUPT
+
+* Enable/Disable music
+SWPMSC INV  @ENABLM
+* Specify time to wait before accepting another key press
+       MOV  @MIDTIM,@KEYTM
+       S    @MKEYWT,@KEYTM
+       B    @SCANL2
+
+* Scan
+* R2 - keyboard column to scan (left-most byte)
+*
+* Select column to scan
+KYSCAN LI   R12,>0024
+       LDCR R2,3
+* Put scaned keyboard rows in R3 (left-most byte)
+       LI   R12,>0006
+       CLR  R3
+       STCR R3,8
+       RT
+
+* Keys to scan for and associated routine to jump to
+* Every three words of memory represent:
+* Key column to scan, Key row to check, address to jump to.
+SCANJP DATA >0100,>2000,MOVLFT
+       DATA >0200,>2000,MOVRGT
+       DATA >0400,>0400,MOVUP
+       DATA >0300,>0100,SWPMSC
+SCANJE
+
+*
+* Update the hero's position.
+*
+* R9 - must contain the map position
+UPTHRO DECT R10
+       MOV  R11,*R10
+* If hero is in the middle of a jump continue the jump
+UPTUP  MOV  @HEROUP,R0
+       JEQ  UPTUP1
+* If player just pressed jump, start a new jump
+       MOV  @UPPRES,R0
+       JNE  UPDTRT
+* Update flag since jump is starting
+       CLR  @HEROUP
+* Set time at which hero must start decelerating
+       LI   R0,200
+       MOV  @MIDTIM,@UPSTOP
+       S    R0,@UPSTOP
+* Set the initial YSPEED
+       LI   R0,>FD00
+       MOV  R0,@YSPEED
+* If the user is not still pressing up, the hero must decelerate
+UPTUP1 MOV  @UPPRES,R0
+       JNE  UPTUP2
+* If the user presses up for too long, the hero must decelerate
+       MOV  @MIDTIM,R0
+       S    @UPSTOP,R0
+       JGT  UPTUP3
+* Decelerate
+UPTUP2 LI   R0,>30
+       A    R0,@YSPEED
+UPTUP3
+* Find minimum/maximum Y positions. Place in R14,R15
+       BL   @MXMNY
+* Update HEROY.
+* If YSPEED is negative, hero will move up.
+       A    @YSPEED,@HEROY
+* Check if new Y position is lower number than minimum
+       C    @HEROY,R14
+       JHE  UPTUP5
+       MOV  R14,@HEROY
+       CLR  @YSPEED
+       JMP  UPTUP4
+* Check if new Y position is higher number than maximum
+UPTUP5 C    @HEROY,R15
+       JLE  UPTUP4
+       MOV  R15,@HEROY
+       CLR  @YSPEED
+* Hero is done jumping
+       SETO @HEROUP
+* Unset the "jump-key-just-pressed" flag
+UPTUP4 SETO @UPPRES
+* Specify that the screen should be refreshed
+       CLR  @DRAWNW
+UPDTRT MOV  *R10+,R11
+       RT
+
+* Get Max & Min Y-locations
+*
+* R4 - hero's X position / 8 (character position instead of pixel position)
+* R5 - hero's head's Y position / 8
+* R6 - hero's foot's Y position / 8
+MXMNY  MOV  @HEROX,R4
+       SRL  R4,3
+       MOV  @HEROY,R5
+       SRL  R5,11
+       MOV  R5,R6
+       AI   R6,3
+* There is a list of pointers within the map
+* Each pointer points to horizontal platform data for a partiuclar map row
+* R7 - address of the current pointer
+* R8 - address after the end of the list of pointers
+       MOV  @HORIZB(9),R7
+       MOV  @HORIZD(9),R8
+* Is the row below or at the hero's foot?
+       DECT R7
+MXMNY1 INCT R7
+       MOV  *R7,R3
+       C    *R3+,R6
+       JL   MXMNY1
+* If yes, look for platform underneath hero
+* R2 - Number of platforms in the current map row
+       MOV  *R3+,R2
+* The next two words contain the first and last map column for a platform within the map row
+* Check if the hero's X position falls within the X positions of a platform
+MXMNY2 C    *R3+,R4
+       JH   MXMNY3
+       C    *R3+,R4
+       JL   MXMNY4
+* If the answer is yes, we found the maximum Y position.
+       MOV  *R7,R3
+       MOV  *R3,R15
+       AI   R15,-3
+       SLA  R15,11
+       JMP  MXMNY5
+* Point R3 to the next pair of words representing a platform's position
+MXMNY3 INCT R3
+* Check if there are any more platform positions in this map row
+MXMNY4 DEC  R2
+       JNE  MXMNY2
+       JMP  MXMNY1
+*
+* Look for a row above the hero's head
+MXMNY5 MOV  @HORIZB(9),R7
+MXMNY6 DECT R8
+       MOV  *R8,R3
+       C    *R3+,R5
+       JL   MXMNY7
+       C    R8,R7
+       JH   MXMNY6
+* Set minimum Y position to 0
+       CLR  R14
+       RT
+* R2 - Number of platforms in the current map row
+MXMNY7 MOV  *R3+,R2
+* The next two words contain the first and last map column for a platform within the map row
+* Check if the hero's X position falls within the X positions of a platform
+MXMNY8 C    *R3+,R4
+       JH   MXMNY9
+       C    *R3+,R4
+       JL   MXMNYA
+* If the answer is yes we found the minimum Y position
+       MOV  *R8,R3
+       MOV  *R3,R14
+       INC  R14
+       SLA  R14,11
+       RT
+* Point R3 to the next pair of words representing a platform's position
+MXMNY9 INCT R3
+* Check if there are any more platform positions in this map row
+MXMNYA DEC  R2
+       JNE  MXMNY8
+* Look at next row of horiztonal platforms if there is one
+       C    R8,R7
+       JH   MXMNY6
+* Set minimum Y position to 0
+       CLR  R14
+       RT
+
+*
+* If the timing is right,
+* play the next note of music in Sound Generator 1 & 2
+*
+NTPAUS DATA 20                      pause between notes (not same as a rest)
+BEAT   DATA 50                      duration of 1/32nd note.
+RESTVL DATA REST                    if this is in place of a tone, then do a rest
+* A beat really lasts 70 units.
+* 50 units is the tone phase, 20 units is the silence phase.
+PLYMSC C    @MIDTIM,@BEATWT
+       MOV  @MIDTIM,R0
+       S    @BEATWT,R0
+       JGT  WAITPL
+       MOV  @ENABLM,R0
+       JNE  NOTPLY
+*
+PLYNOW DECT R10
+       MOV  R11,*R10
+* Update the tone for sound generator 1
+       LI   R0,>8400
+       LI   R3,MSC1PS
+       LI   R4,M1BEAT
+       LI   R5,SILNC1
+       LI   R6,MUSIC1
+       LI   R7,MEND1
+       LI   R8,>9000
+       BL   @PLYM0
+* Update the tone for sound generator 2
+       LI   R3,MSC2PS
+       LI   R4,M2BEAT
+       LI   R5,SILNC1
+       LI   R6,MUSIC2
+       LI   R7,MEND2
+       LI   R8,>B000
+       BL   @PLYM0
+*
+       MOV  *R5,*R5
+       JEQ  PLYW1
+* Set timer for tone phase
+       MOV  @MIDTIM,@BEATWT
+       S    @BEAT,@BEATWT
+       JMP  PLYMRT
+* Set timer for the silence phase
+PLYW1  MOV  @MIDTIM,@BEATWT
+       S    @NTPAUS,@BEATWT
+* Switch between tone phase and silence phase
+PLYMRT INV  *R5
+*
+       MOV  *R10+,R11
+WAITPL RT
+* Turn music off
+NOTPLY LI   R8,>9F00
+       MOVB R8,@>8400
+       LI   R8,>BF00
+       MOVB R8,@>8400
+       RT
+
+*
+* Change the state of either sound generator 1 or 2
+*
+* R0 - address to send sound generator data to
+* R3 - address of the next piece of data for sound generator
+* R4 - address of the scheduled time to change generator tone
+* R5 - address specifying if generator should now play silence
+* R6 - address of beginning of sound generator data
+* R7 - address of end of sound generator data
+* R8 - used to change the generator's volume
+PLYM0
+* If zero beats are left for the current tone, play next tone or silence pause.
+       MOV  *R4,*R4
+       JEQ  PLYM1
+* If this is the tone phase, decrement number of remaining beats.
+* If this is the silence phase, don't change the number of beats.
+       A    *R5,*R4
+       RT
+PLYM1
+* Decide if we should play tone or silence
+       MOV  *R5,*R5
+       JEQ  PLYSLC
+* If playing a rest, turn off the sound generator
+       MOV  *R3,R1
+       C    *R1,@RESTVL
+       JEQ  PLYRST
+* Load tone and volume into sound address
+       MOVB *R1+,*R0
+       NOP
+       MOVB *R1+,*R0
+       JEQ  PLYM2
+       AI   R8,>800
+       MOVB R8,*R0
+* Set remaining beats
+PLYM2  MOV  *R1+,*R4
+       DEC  *R4
+* Restart music data if necessary
+       C    R1,R7
+       JNE  PLYM3
+       MOV  R6,R1
+* Update position within music data
+PLYM3  MOV  R1,*R3
+       RT
+* Turn off the sound generater to play a rest
+PLYRST AI   R8,>F00
+       MOVB R8,*R0
+       INCT R1
+       JMP  PLYM2
+* Turn off sound generator as part of silence phase
+PLYSLC AI   R8,>F00
+       MOVB R8,*R0
+       RT
+
+*
+* Draw the scrollable map
+*
+* R0 - Screen location to write to
+* R2 - Address of map header
+DRWMAP DECT R10
+       MOV  R11,*R10
+* R3 - Pixel Scroll Amount (left-most column)
+* R6 - Column Scroll Amount
+       MOV  @MAPX,R6
+       MOV  R6,R3
+       SRL  R6,3
+       SLA  R3,13
+       SRL  R3,5
+* R5 - address of next piece of accordion data
+       MOV  @ACCRDB(2),R5
+* Store end of map in R8
+       MOV  @SCREND(2),R8
+* Store position of map in R9
+       MOV  @SCRENB(2),R9
+       A    R6,R9
+HSCRL
+       MOVB *R5,*R5
+       JEQ  DRWFW
+* Assign new screen position to write to
+       MOVB @1(5),R0
+       SRL  R0,8
+       SLA  R0,5
+       AI   R0,6*>20                 Add map offset
+       BL   @INTCHR
+* Draw one row
+       BL   @DRWALL
+       AI   R9,-32
+*
+DRWFW
+       INCT R5
+       A    @MAPWD,R9                Increase R9 to equal address of next row
+       C    R9,R8
+       JL   HSCRL
+*
+       BL   @DRWSNP
+* Define new character codes for character >00
+       MOV  R3,R0
+       SRL  R0,8
+       SLA  R0,3
+       AI   R0,>F8*8+PTNPG1
+       LI   R1,PATT00
+       LI   R2,8
+       BL   @VMBR
+       LI   R0,PTNPG1
+       BL   @VMBW
+*
+       MOV  *R10+,R11
+       RT
+
+* Write one row of characters, all characters
+DRWALL MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
+       MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
+       MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
+       MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
+       MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
+       MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
+       MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
+       MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
+       MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
+       MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
+       MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
+       MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
+       MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
+       MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
+       MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
+       MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
+       MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
+       MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
+       MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
+       MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
+       MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
+       MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
+       MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
+       MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
+       MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
+       MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
+       MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
+       MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
+       MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
+       MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
+       MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
+       MOVB *R9+,R1
+       AB   R3,R1
+       MOVB R1,@VDPWD
+       RT
+
+*
+* Copy map snippets to VDP RAM
+*
+DRWSNP DECT R10
+       MOV  R11,*R10
+* Store end of snippets in R8
+       MOV  @SNIPTD(2),R8
+* Store position of snippets in R9
+       MOV  @SNIPTB(2),R9
+* R0 - initially, set to snippet's column in the map
+*      later, snippet's column on the screen
+* R2 - snippet's length
+SNP1   MOV  @2(9),R0
+       MOV  @4(9),R2
+* Check if snippet is to left of screen
+       MOV  R2,R4
+       A    R0,R4
+       C    R6,R4
+       JHE  SNP9
+* Decrease R0 by the map's left offset AND
+* Check if snippet is to right of screen
+       S    R6,R0
+       CI   R0,>20
+       JGT  SNPRT
+       JEQ  SNPRT
+* Snippet is at least partially on screen.
+* Check if it overflows to the right of screen
+       MOV  R0,R4
+       A    R2,R4
+       AI   R4,-32
+       JLT  SNP2
+       JEQ  SNP2
+* Snippet overflows the screen.
+       S    R4,R2
+       JEQ  SNP8
+*
+SNP2
+       MOV  @6(9),R1
+* Set R0 to screen position
+* If snippet starts to the left of the screen adjust R0, R1, and R2 accordingly
+       MOV  R0,R0
+       JGT  SNP3
+       A    R0,R2
+       S    R0,R1
+       CLR  R0
+* Increase R0 to account for the map row
+SNP3   MOV  @0(9),R4
+       SLA  R4,5
+       A    R4,R0
+* Add map's vertical offset to R0
+       AI   R0,>C0
+*
+       BL   @INTCHR
+SNP4   MOVB *R1+,R4
+       AB   R3,R4
+       MOVB R4,@VDPWD
+       DEC  R2
+       JNE  SNP4
+* Inspect the next map snippet
+SNP8   AI   R9,8
+SNP8A  C    R9,R8
+       JL   SNP1
+*
+SNPRT  MOV  *R10+,R11
+       RT
+* Skip four snippets at once
+SNP9   AI   R9,32
+       JMP  SNP8A
+
+*
+* Specify the initial screen position to write to.
+*
+* R0 - a screen position, this routine will determine which byte of VDP RAM to use.
+INTCHR DECT R10
+       MOV  R0,*R10
+*
+       MOV  @NEXTPG,@NEXTPG
+       JLT  ITCHR0
+       AI   R0,SCNPG2
+ITCHR0 ORI  R0,>4000               Set write bit to true
+       SWPB R0
+       MOVB R0,@VDPWA
+       SWPB R0
+       MOVB R0,@VDPWA
+*
+       MOV  *R10+,R0
+       RT
+
+*
+* Redraw hero sprite
+*
+HEROSP DECT R10
+       MOV  R11,*R10
+* Confirm enough time has passed
+       MOV  @MIDTIM,R0
+       S    @FLIPTM,R0
+       JGT  HEROR2
+* Set next wait time
+       S    @HEROWT,@FLIPTM
+* Redraw hero sprite, either moving or standing still
+       MOV  @HEROSL,R0
+       JNE  MOVANI
+* Display sprite as standing still
+       MOV  @HEROST,R1
+       BL   @HEROVD
+*
+       MOV  *R10+,R11
+       RT
+* Animate hero sprite as it moves
+MOVANI
+* Move to next frame
+       MOV  @ANIADR,R5
+       MOV  *R5+,R1
+       BL   @HEROVD
+* Restart animation loop if necessary
+       CI   R5,HEROED
+       JL   HERORT
+       LI   R5,HEROMV
+* Store next set of characters for animation
+HERORT MOV  R5,@ANIADR
+*
+HEROR2 MOV  *R10+,R11
+       RT
+
+* Update the hero-portion of the sprite attribute list in VDP RAM
+* R1 is expected to have two character codes, one in each byte.
+HEROVD DECT R10
+       MOV  R11,*R10
+       DECT R10
+       MOV  R1,*R10
+* Select which page of the sprite attribute list we plan to write to
+       LI   R0,SPRPG1
+       MOV  @NEXTPG,@NEXTPG
+       JLT  PK2
+       LI   R0,SPRPG2
+* Respecify hero Y location
+PK2    MOVB @HEROY,R1
+       AI   R1,>1800                    * Move the sprite downards by three positions because the map is offset by that much
+       BL   @VSBW
+       AI   R0,4
+       AI   R1,>1000
+       BL   @VSBW
+* Respecify hero X location
+       AI   R0,-3
+       MOV  @HEROX,R1
+       S    @MAPX,R1
+       SWPB R1
+       BL   @VSBW
+       AI   R0,4
+       BL   @VSBW
+* If hero direction is "left", at >80 to each character code.
+       MOV  *R10+,R1
+       MOV  @HERODR,R2
+       JEQ  PK3
+       AI   R1,>8080
+* Write both character codes
+PK3    AI   R0,-3
+       BL   @VSBW
+       SWPB R1
+       AI   R0,4
+       BL   @VSBW
+* Flip page
+       BL   @FLIPPG
+*
+       MOV  *R10+,R11
+       RT
+
+*
+* Flip Page
+*
+FLIPPG DECT R10
+       MOV  R11,*R10
+*
+       MOV  @NEXTPG,@NEXTPG
+       JGT  FLIP2
+* Switch to page 1DDD
+FLIP1  MOV  @VDPR2A,R0
+       BL   @VWTR
+       MOV  @VDPR5A,R0
+       BL   @VWTR
+       JMP  FLIPNG
+* Switch to page 2
+FLIP2  MOV  @VDPR2B,R0
+       BL   @VWTR
+       MOV  @VDPR5B,R0
+       BL   @VWTR
+* Specify the what the next page will be,
+* the page you shoud now write to.
+FLIPNG NEG  @NEXTPG
+*
+       MOV  *R10+,R11
+       RT
+
+*
+* VDP RAM access
+*
+
+BIT0   DATA >8000
+BIT1   DATA >4000
+VSBW   DECT R10
+       MOV  R0,*R10
+* Specify that we wish to write to the VDP RAM
+       SZC  @BIT0,R0                  Set most signfication bit for writing
+       SOC  @BIT1,R0                  Set second most signfication bit for writing
+* Specify VDP address (write least-signficant byte first)
+       SWPB R0
+       MOVB R0,@VDPWA
+       SWPB R0
+       MOVB R0,@VDPWA
+* Specify data to write
+       NOP
+       MOVB R1,@VDPWD
+*
+       MOV  *R10+,R0
+       RT
+
+VMBW   DECT R10
+       MOV  R0,*R10
+       DECT R10
+       MOV  R1,*R10
+       DECT R10
+       MOV  R2,*R10
+* Specify that we wish to write to the VDP RAM
+       SZC  @BIT0,R0                  Set most signfication bit for writing
+       SOC  @BIT1,R0                  Set second most signfication bit for writing
+* Specify VDP address (write least-signficant byte first)
+       SWPB R0
+       MOVB R0,@VDPWA
+       SWPB R0
+       MOVB R0,@VDPWA
+* Specify data to write
+       NOP
+VMBW1  MOVB *R1+,@VDPWD
+       DEC  R2
+       JNE  VMBW1
+*
+       MOV  *R10+,R2
+       MOV  *R10+,R1
+       MOV  *R10+,R0
+       RT
+
+VWTR   DECT R10
+       MOV  R0,*R10
+* Specify that we are changing a registers
+       SOC  @BIT0,R0
+       SZC  @BIT1,R0
+* Write new value to VDP register
+       SWPB R0
+       MOVB R0,@VDPWA
+* Specify VDP register to change
+       SWPB R0
+       MOVB R0,@VDPWA
+*
+       MOV  *R10+,R0
+       RT
+
+VMBR   DECT R10
+       MOV  R0,*R10
+       DECT R10
+       MOV  R1,*R10
+       DECT R10
+       MOV  R2,*R10
+* Specify VDP address (write least-signficant byte first)
+       SWPB R0
+       MOVB R0,@VDPWA
+       SWPB R0
+       MOVB R0,@VDPWA
+* Specify data to write
+       NOP
+VMBR1  MOVB @VDPRD,*R1+
+       DEC  R2
+       JNE  VMBR1
+*
+       MOV  *R10+,R2
+       MOV  *R10+,R1
+       MOV  *R10+,R0
+       RT
+       END
