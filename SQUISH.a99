@@ -153,7 +153,7 @@ GAMELP
        BL   @USRIPT
 * Update hero position
        LI   R9,MP02HD
-*       BL   @UPTHRO
+       BL   @UPTHRO
 *
        BL   @PLYMSC
 *
@@ -531,12 +531,17 @@ UPTUP1 MOV  @UPPRES,R0
 * Decelerate
 UPTUP2 LI   R0,>30
        A    R0,@YSPEED
-UPTUP3
-* Find minimum/maximum Y positions. Place in R14,R15
-       BL   @MXMNY
+*
+UPTUP3 CLR  R14
+       LI   R15,>7000
+* If YSPEED is negative, put minimum Y position in R14
+       MOV  @YSPEED,@YSPEED
+       JGT  UPTUP6
+       JEQ  UPTUP6
+       BL   @MINY
 * Update HEROY.
 * If YSPEED is negative, hero will move up.
-       A    @YSPEED,@HEROY
+UPTUP6 A    @YSPEED,@HEROY
 * Check if new Y position is lower number than minimum
        C    @HEROY,R14
        JHE  UPTUP5
@@ -557,86 +562,44 @@ UPTUP4 SETO @UPPRES
 UPDTRT MOV  *R10+,R11
        RT
 
-* Get Max & Min Y-locations
+* Get Min Y-locations
 *
+MINBLK DATA >D000
 * R4 - hero's X position / 8 (character position instead of pixel position)
-* R5 - hero's head's Y position / 8
-* R6 - hero's foot's Y position / 8
-MXMNY  MOV  @HEROX,R4
-       SRL  R4,3
-       MOV  @HEROY,R5
+* R5 - hero's head's Y position / 8 (left-most byte)
+MINY   MOV  @HEROY,R5
        SRL  R5,11
-       MOV  R5,R6
-       AI   R6,3
-* There is a list of pointers within the map
-* Each pointer points to horizontal platform data for a partiuclar map row
-* R7 - address of the current pointer
-* R8 - address after the end of the list of pointers
-       MOV  @HORIZB(9),R7
-       MOV  @HORIZD(9),R8
-* Is the row below or at the hero's foot?
-       DECT R7
-MXMNY1 INCT R7
-       MOV  *R7,R3
-       C    *R3+,R6
-       JL   MXMNY1
-* If yes, look for platform underneath hero
-* R2 - Number of platforms in the current map row
-       MOV  *R3+,R2
-* The next two words contain the first and last map column for a platform within the map row
-* Check if the hero's X position falls within the X positions of a platform
-MXMNY2 C    *R3+,R4
-       JH   MXMNY3
-       C    *R3+,R4
-       JL   MXMNY4
-* If the answer is yes, we found the maximum Y position.
-       MOV  *R7,R3
-       MOV  *R3,R15
-       AI   R15,-3
-       SLA  R15,11
-       JMP  MXMNY5
-* Point R3 to the next pair of words representing a platform's position
-MXMNY3 INCT R3
-* Check if there are any more platform positions in this map row
-MXMNY4 DEC  R2
-       JNE  MXMNY2
-       JMP  MXMNY1
+       SLA  R5,8
 *
-* Look for a row above the hero's head
-MXMNY5 MOV  @HORIZB(9),R7
-MXMNY6 DECT R8
-       MOV  *R8,R3
-       C    *R3+,R5
-       JL   MXMNY7
-       C    R8,R7
-       JH   MXMNY6
-* Set minimum Y position to 0
+       MOV  @HEROX,R4
+       SRL  R4,3
+MINY1
+* R6 - left location in tile map
+* R7 - right location in tile map
+* R8 - location in accordian map
+       MOV  @SCRENB(9),R6
+       MOV  @ACCRDB(9),R8
+* R15 will hold minimum Y location
        CLR  R14
-       RT
-* R2 - Number of platforms in the current map row
-MXMNY7 MOV  *R3+,R2
-* The next two words contain the first and last map column for a platform within the map row
-* Check if the hero's X position falls within the X positions of a platform
-MXMNY8 C    *R3+,R4
-       JH   MXMNY9
-       C    *R3+,R4
-       JL   MXMNYA
-* If the answer is yes we found the minimum Y position
-       MOV  *R8,R3
-       MOV  *R3,R14
-       INC  R14
-       SLA  R14,11
-       RT
-* Point R3 to the next pair of words representing a platform's position
-MXMNY9 INCT R3
-* Check if there are any more platform positions in this map row
-MXMNYA DEC  R2
-       JNE  MXMNY8
-* Look at next row of horiztonal platforms if there is one
-       C    R8,R7
-       JH   MXMNY6
-* Set minimum Y position to 0
-       CLR  R14
+* Point R6 to the leftmost column that hero is in
+       A    R4,R6
+* Check if the cell in the map holds a character that hero can't pass through
+* If yes, set R14 to the index of the following row of map tiles
+MINY2  CB   *R6,@MINBLK
+       JHE  MINY3
+       CB   @2(6),@MINBLK
+       JL   MINY4
+MINY3  MOVB @3(8),R14
+* Update R6 to the next tile row
+* Update R8 to the next accordian entry
+MINY4  A    @MAPCOL(9),R6
+       INCT R8
+       CB   @1(8),R5
+       JL   MINY2
+* account for three rows of repeated character. 3 rows of non-scrolling is accounted for later.
+       AI   R14,>300
+* R14 Multiply by 8
+       SLA  R14,3
        RT
 
 *
@@ -971,6 +934,7 @@ SNPRT  MOV  *R10+,R11
 * Skip four snippets at once
 SNP9   AI   R9,32
        JMP  SNP8A
+
 
 *
 * Specify the initial screen position to write to.
