@@ -2,9 +2,7 @@
        REF  LOADER,VMBW
 
 * Use this program in order to load all
-* of the files needed to test SCRNWRT.
-* It will execute the SCRNWRT tests
-* automatically.
+* of the files needed to test SQUISH.
 
 PABBUF EQU  >1000
 PAB    EQU  >F80
@@ -31,19 +29,26 @@ FILEN4 TEXT 'DSK2.SPRITMUSIC.OBJ'
        BSS  3
 PDATAE
 
-LDMSG  TEXT 'Loading SQUISH.OBJ, SPRITEDAT.OBJ,'
-       TEXT 'SPRITEMAP2.OBJ, SPRITMUSIC.OBJ  '
-LDMSGE
-
-LTEST  LI   R0,0
-       LI   R1,LDMSG
-       LI   R2,LDMSGE-LDMSG
+LTEST  
+* Store Screen position in R7
+       CLR  R7
+* Store file information in R3,R4, and R5
+       LI   R3,PAB
+       LI   R4,PDATA1
+       LI   R5,PDATA2-PDATA1
+* Write filename to screen
+LTEST1 MOV  R7,R0
+       MOV  R4,R1
+       AI   R1,10
+       MOV  @8(4),R2
        BLWP @VMBW
+	   AI   R7,32
 * Write PAB to VDP
-       LI   R0,PAB
-       LI   R1,PDATA1
-       LI   R2,PDATA2-PDATA1
-LTEST1 BLWP @VMBW
+       MOV  R3,R0
+       MOV  R4,R1
+       MOV  R5,R2
+       BLWP @VMBW
+*
        LI   R6,PAB+9
        MOV  R6,@PNTR
 * Load the assembled code
@@ -51,8 +56,8 @@ LTEST1 BLWP @VMBW
 * If the Eqaul bit is set, report error
        JEQ  RPTERR
 * Update R1 so we can load the next file
-       A    R2,R1
-       CI   R1,PDATAE
+       A    R5,R4
+       CI   R4,PDATAE
        JL   LTEST1
 * Enter the test program
        B    @RUNTST
@@ -64,24 +69,24 @@ ERRCD1 EVEN
 ERRFL  TEXT 'File: '
 ERRFL1
 *
-RPTERR MOV  R1,R3
+RPTERR
 * Add error code to message
        AI   R0,>3000
        MOVB R0,@ERRCD
 * Display error message
-       LI   R0,>60
+       MOV  R7,R0
        LI   R1,ERRMSG
        LI   R2,ERRCD1-ERRMSG
        BLWP @VMBW
 * Display particular file to fail
-       LI   R0,>80
+       AI   R0,>20
        LI   R1,ERRFL
        LI   R2,ERRFL1-ERRFL
        BLWP @VMBW
        A    R2,R0
-       MOV  R3,R1
-       AI   R1,>A
-       LI   R2,>10
+       MOV  R4,R1
+       AI   R1,10
+       MOV  @8(4),R2
        BLWP @VMBW
 JMP    LIMI 2
        LIMI 0
