@@ -511,7 +511,7 @@ UPTUP  MOV  @HEROUP,R0
        JEQ  UPTUP1
 * If player just pressed jump, start a new jump
        MOV  @UPPRES,R0
-       JNE  UPDTRT
+       JNE  UPTSDW
 * Update flag since jump is starting
        CLR  @HEROUP
 * Set time at which hero must start decelerating
@@ -536,9 +536,11 @@ UPTUP3 CLR  R14
        LI   R15,>7000
 * If YSPEED is negative, put minimum Y position in R14
        MOV  @YSPEED,@YSPEED
-       JGT  UPTUP6
+       JGT  UPTUP7
        JEQ  UPTUP6
        BL   @MINY
+       JMP  UPTUP6
+UPTUP7 BL   @MAXY
 * Update HEROY.
 * If YSPEED is negative, hero will move up.
 UPTUP6 A    @YSPEED,@HEROY
@@ -561,10 +563,13 @@ UPTUP4 SETO @UPPRES
        CLR  @DRAWNW
 UPDTRT MOV  *R10+,R11
        RT
+* If the character is moving sideways,
+* update Y position if he moves off of a cliff
+UPTSDW JMP  UPTUP2
 
+MINBLK DATA >D000
 * Get Min Y-locations
 *
-MINBLK DATA >D000
 * R4 - hero's X position / 8 (character position instead of pixel position)
 * R5 - hero's head's Y position / 8 (left-most byte)
 MINY   MOV  @HEROY,R5
@@ -573,13 +578,11 @@ MINY   MOV  @HEROY,R5
 *
        MOV  @HEROX,R4
        SRL  R4,3
-MINY1
 * R6 - left location in tile map
-* R7 - right location in tile map
 * R8 - location in accordian map
        MOV  @SCRENB(9),R6
        MOV  @ACCRDB(9),R8
-* R15 will hold minimum Y location
+* R14 will hold minimum Y location
        CLR  R14
 * Point R6 to the leftmost column that hero is in
        A    R4,R6
@@ -601,6 +604,48 @@ MINY4  A    @MAPCOL(9),R6
 * R14 Multiply by 8
        SLA  R14,3
        RT
+
+* Get Max Y-locations
+*
+* R4 - hero's X position / 8 (character position instead of pixel position)
+* R5 - hero's foot's Y position / 8 (left-most byte)
+MAXY   MOV  @HEROY,R5
+       SRL  R5,11
+       SLA  R5,8
+       AI   R5,3
+*
+       MOV  @HEROX,R4
+       SRL  R4,3
+* R6 - left location in tile map
+* R8 - location in accordian map
+       MOV  @SCREND(9),R6
+       S    @MAPCOL(9),R6
+       MOV  @ACCRDD(9),R8
+       DECT R8
+* R15 will hold maximum Y location
+       MOVB @1(8),R15
+       DECT R8
+* Point R6 to the leftmost column that hero is in
+       A    R4,R6
+* Check if the cell in the map holds a character that hero can't pass through
+* If yes, set R14 to the index of the following row of map tiles
+MAXY2  CB   *R6,@MINBLK
+       JHE  MAXY3
+       CB   @2(6),@MINBLK
+       JL   MAXY4
+MAXY3  MOVB @1(8),R15
+* Update R6 to the next tile row
+* Update R8 to the next accordian entry
+MAXY4  S    @MAPCOL(9),R6
+       DECT R8
+       CB   @1(8),R5
+       JHE  MAXY2
+* account for three rows of repeated character. 3 rows of non-scrolling is accounted for later.
+*       AI   R15,>300
+* R14 Multiply by 8
+       SLA  R15,3
+       RT
+
 
 *
 * If the timing is right,
