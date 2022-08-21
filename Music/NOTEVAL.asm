@@ -1,7 +1,8 @@
 *
 * Durantion values
 *
-* Make a 64th note equal 0.028409090909 seconds for mario
+* The smallest not should be set to a multiple of 3.
+* Otherwise Trippletes will get tone generators out of sync.
 N64    EQU  3
 N32    EQU  N64*2
 N16    EQU  N32*2

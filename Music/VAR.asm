@@ -2,6 +2,7 @@
 *
        DEF  SND1TM,SND2TM,SND3TM
        DEF  SND1AD,SND2AD,SND3AD
+       DEF  SND1VL,SND2VL,SND3VL
 *
        DEF  BUTTON
 *
@@ -33,6 +34,9 @@ SND3TM BSS  2             Remaining time for current note in sound generator 2
 SND1AD BSS  2             Address of next note for sound generator 1
 SND2AD BSS  2             Address of next note for sound generator 2
 SND3AD BSS  2             Address of next note for sound generator 2
+SND1VL BSS  2             Current Volume
+SND2VL BSS  2             "
+SND3VL BSS  2             "
 *
 * Timer variables
 *

@@ -2,7 +2,7 @@
 *
        REF  SND1AD,SND2AD,SND3AD              Ref from VAR
        REF  SND1TM,SND2TM,SND3TM              "
-       REF  CURLVL                            "
+       REF  SND1VL,SND2VL,SND3VL              "
        REF  WINTR1,WINTR2,WINTR3              Ref from TUNEWINTER
 
 *
@@ -10,6 +10,7 @@
 *
 SGADR  EQU  >8400
        COPY 'CONST.asm'
+ONE    BYTE >01
        EVEN
 
 *
@@ -27,6 +28,10 @@ PLYINT
        MOV  R0,@SND2AD
        LI   R0,WINTR3
        MOV  R0,@SND3AD
+       CLR  R0
+       MOV  R0,@SND1VL
+       MOV  R0,@SND2VL
+       MOV  R0,@SND3VL
 *
        RT
 
@@ -40,26 +45,27 @@ PLYMSC DECT R10
 * Play from Tone Generator 1
        LI   R3,SND1AD
        LI   R4,SND1TM
+       LI   R5,SND1VL
        LI   R8,>9000
-       LI   R9,>0000
        BL   @PLYONE
 * Play from Tone Generator 2
        LI   R3,SND2AD
        LI   R4,SND2TM
+       LI   R5,SND2VL
        LI   R8,>B000
-       LI   R9,>0000
        BL   @PLYONE
 * Play from Tone Generator 3
        LI   R3,SND3AD
        LI   R4,SND3TM
+       LI   R5,SND3VL
        LI   R8,>D000
-       LI   R9,>0000
        BL   @PLYONE
 *
 PLYMRT MOV  *R10+,R11
        RT
 
 NTPAUS DATA 2                       pause between notes (not same as a rest)
+NTDIM  DATA >F+2                    point at which to reduce the volume
 RESTVL DATA REST                    if this is in place of a tone, then do a rest
 STOPVL DATA STOP
 REPTVL DATA REPEAT
@@ -83,8 +89,8 @@ REPTMS INC  *R4
 * R0 - address to send sound generator data to
 * R3 - address of address of the next piece of data for sound generator
 * R4 - address of address of the scheduled time to change generator tone
+* R5 - address of current volume
 * R8 - used to change the generator's volume
-* R9 - desired volume
 PLYONE 
 * Let R1 = address of next note
        MOV  *R3,R1
@@ -94,7 +100,10 @@ PLYONE
        DEC  *R4
        JEQ  NOTE
        C    *R4,@NTPAUS
-       JH   PLYRT
+       JLE  PAUS
+       C    *R4,@NTDIM
+       JLE  DIMVOL
+       JMP  PLYRT
 * Turn off sound generator between notes
 PAUS   AI   R8,>F00
        MOVB R8,*R0
@@ -122,11 +131,19 @@ TONE   MOVB *R1+,R2
        MOVB R2,*R0
        NOP
        MOVB *R1+,*R0
-* Load Volume into sound address       
-       AB   R9,R8
+* Set volume to peek and load Volume into sound address
+       CLR  *R5
+       AB   *R5,R8
        MOVB R8,*R0
 * Set remaining time
 TONE1  MOV  *R1+,*R4
 * Update position within music data
        MOV  R1,*R3
 PLYRT  RT
+*
+* Reduce volume
+*
+DIMVOL AB   @ONE,*R5
+       AB   *R5,R8
+       MOVB R8,*R0
+       RT
