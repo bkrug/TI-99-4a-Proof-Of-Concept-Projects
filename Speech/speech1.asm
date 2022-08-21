@@ -1,3 +1,4 @@
+* Star spangeled banner
        REF  SPCHWT,SPCHRD,GPLWS,KSCAN
        DEF  START,DIRECT
 PHROM  DATA 0
