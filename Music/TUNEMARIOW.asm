@@ -38,7 +38,42 @@ MW1
        DATA A2,N16TRP
        DATA Bb2,N8
        DATA Bb2,N4+N8
+* Measure 4
+       DATA A2,N4
+       DATA F2,N8+N16
+       DATA C2,N16
+       DATA D2,N16
+       DATA F2,N8
+       DATA F2,N8+N16
+       DATA REST,N16
+       DATA D2,N16
 *
+       DATA C2,N8
+       DATA F2,N8
+       DATA F2,N8
+       DATA C3,N8
+       DATA A2,N8+N16
+       DATA G2,N16
+       DATA G2,N4
+*
+       DATA A2,N4
+       DATA F2,N8+N16
+       DATA C2,N16
+
+       DATA D2,N16
+       DATA F2,N8
+       DATA F2,N8+N16
+       DATA REST,N16
+       DATA D2,N16
+*
+       DATA C2,N8
+       DATA F2,N8
+       DATA Bb2,N16
+       DATA A2,N16
+       DATA G2,N16
+       DATA F2,N16
+       DATA F2,N2
+* Measure 8
        DATA REPEAT,MW1
 
 MWRLD2
@@ -68,7 +103,13 @@ MW2
        DATA F2,N16TRP
        DATA G2,N8
        DATA Gb2,N4+N8
+* Measure 4
 *
+       DATA REST,NDBL
+*
+*
+       DATA REST,NDBL
+* Measure 8
        DATA REPEAT,MW2
 
 MWRLD3
@@ -86,7 +127,37 @@ MW3
        DATA D1,N4
        DATA G1,N8
        DATA C1,N4+N8
+* Measure 4
+       DATA F1,N4
+       DATA A1,N4
+       DATA Bb1,N4
+       DATA B1,N4
 *
+       DATA A1,N4
+       DATA Ab1,N4
+       DATA G1,N8
+       DATA D1,N8
+       DATA E1,N8
+       DATA F1,N8
+*
+       DATA F1,N4
+       DATA A1,N4
+       DATA Bb1,N4
+       DATA B1,N4
+*
+       DATA C2,N8
+       DATA D1,N8
+       DATA E1,N8
+       DATA G1,N8
+       DATA F1,N8
+       DATA D1,N8
+       DATA F1,N4
+* Measure 8
        DATA REPEAT,MW3
 
        END
+
+* Linus and Lucy
+* https://musescore.com/user/28953060/scores/5344826
+* Jurrasic Park
+* https://musescore.com/user/26033266/scores/5211161

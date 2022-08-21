@@ -5,6 +5,8 @@
 *
        DEF  BUTTON
 *
+       DEF  PRVTCK,NXTTCK
+*
        DEF  LBR0,LBR1,LBR2,LBR3,LBR4
        DEF  LBR5,LBR6,LBR7,LBR8,LBR9
        DEF  LBR13,LBR14,LBR15
@@ -31,6 +33,11 @@ SND3TM BSS  2             Remaining time for current note in sound generator 2
 SND1AD BSS  2             Address of next note for sound generator 1
 SND2AD BSS  2             Address of next note for sound generator 2
 SND3AD BSS  2             Address of next note for sound generator 2
+*
+* Timer variables
+*
+PRVTCK BSS  2
+NXTTCK BSS  2
 *
 * KSCAN Variable
 *

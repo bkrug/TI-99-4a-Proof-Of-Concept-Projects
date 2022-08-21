@@ -41,19 +41,19 @@ PLYMSC DECT R10
        LI   R3,SND1AD
        LI   R4,SND1TM
        LI   R8,>9000
-       LI   R9,>0800
+       LI   R9,>0000
        BL   @PLYONE
 * Play from Tone Generator 2
        LI   R3,SND2AD
        LI   R4,SND2TM
        LI   R8,>B000
-       LI   R9,>0800
+       LI   R9,>0000
        BL   @PLYONE
 * Play from Tone Generator 3
        LI   R3,SND3AD
        LI   R4,SND3TM
        LI   R8,>D000
-       LI   R9,>0800
+       LI   R9,>0000
        BL   @PLYONE
 *
 PLYMRT MOV  *R10+,R11
