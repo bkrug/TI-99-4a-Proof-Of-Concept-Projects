@@ -53,7 +53,7 @@ PLYMSC DECT R10
        LI   R3,SND3AD
        LI   R4,SND3TM
        LI   R8,>D000
-       LI   R9,>0000
+       LI   R9,>0800
        BL   @PLYONE
 *
 PLYMRT MOV  *R10+,R11
@@ -114,10 +114,15 @@ NOTE1  C    *R1,@REPTVL
        MOVB R8,*R0
        INCT R1
        JMP  TONE1
-* Play tone. Load tone and volume into sound address
-TONE   MOVB *R1+,*R0
+* Play tone.
+* Load tone into sound address. Have to select generator, too.
+TONE   MOVB *R1+,R2
+       AB   R8,R2
+       AI   R2,->1000
+       MOVB R2,*R0
        NOP
        MOVB *R1+,*R0
+* Load Volume into sound address       
        AB   R9,R8
        MOVB R8,*R0
 * Set remaining time
