@@ -130,9 +130,9 @@ ENVELP
        MOV  R3,R4
        AI   R4,SNDVOL
 * Let envelope select volume
-       BL   @ENV1
+       BL   @ENV2
 * Set new volume
-       AB   @SNDVOL(R3),R8
+       AB   *R4,R8
        MOVB R8,*R0
 *
        MOV  *R10+,R11
@@ -189,18 +189,15 @@ ENV2
        JNE  ENV2A
 * Yes, is it a rest?
        C    *R1,@RESTVL
-       JNE  ENV2Z
-* Yes, turn off sound
-       MOVB @NOVOL,*R4
-       RT
-* No, set volume to peek and load Volume into sound address
-ENV2Z  SB   *R4,*R4
+       JEQ  ENV2Y
+* No, set volume to peek
+       SB   *R4,*R4
        RT
 * Are we at end of note?
 ENV2A  C    @SNDTIM(R3),@NTPAUS
        JH   ENV2B
 * Yes, turn off sound
-       MOVB @NOVOL,*R4
+ENV2Y  MOVB @NOVOL,*R4
        RT
 * No, are we at point to dim volume?
 ENV2B  C    @SNDTIM(R3),@NTDIM
