@@ -9,14 +9,6 @@
        COPY 'CONST.asm'
        COPY 'CPUADR.asm'
 *
-ROW0   EQU  >0001
-ROW1   EQU  >0002
-ROW2   EQU  >0004
-ROW3   EQU  >0008
-ROW4   EQU  >0010
-ROW5   EQU  >0020
-ROW6   EQU  >0040
-ROW7   EQU  >0080
 COL0   EQU  >0800
 COL1   EQU  >0900
 COL2   EQU  >0A00
@@ -89,7 +81,7 @@ KSCAN7 AI   R2,>100
        CI   R2,COL5
        JLE  KSCAN1
 * No Key pressed in any column
-       JMP  KSCAN8       
+       JMP  KEYRT       
 
 *
 * Key is down
@@ -110,7 +102,7 @@ KEYDWN AI   R2,-COL0
        JEQ  KD1
 * No, return to caller
        DEC  @KEYTIM
-       JMP  KSCAN8
+       JMP  KEYRT
 * Save key
 KD1    MOVB *R4,@CURKEY
        MOVB *R4,@PRVKEY
@@ -124,6 +116,6 @@ KD1    MOVB *R4,@CURKEY
 *       BL   @VDPREG
 *
 
-KSCAN8
+KEYRT
        MOV  *R10+,R11
        RT
