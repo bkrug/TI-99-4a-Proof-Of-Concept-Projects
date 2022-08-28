@@ -7,11 +7,14 @@ REPEAT EQU  >CFFE       Play signal/tune as repeated loop
 *
 * Button flags
 *
-FLGLFT EQU  >8000         Mask for left flag in button address
-FLGRGT EQU  >4000         Mask for right flag in button address
-FLGUP  EQU  >2000         Mask for up flag in button address
-FLGDWN EQU  >1000         Mask for down flag in button address
-FLGFYR EQU  >0800         Mask for fire flag in button address
+FLG0   EQU  >8000
+FLG1   EQU  >4000
+FLG2   EQU  >2000
+FLG3   EQU  >1000
+FLGA   EQU  >0800
+FLGB   EQU  >0400
+FLGC   EQU  >0200
+FLGD   EQU  >0100
 *
 * Other
 *

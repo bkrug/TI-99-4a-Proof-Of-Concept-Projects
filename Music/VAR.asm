@@ -4,7 +4,7 @@
        DEF  SND1AD,SND2AD,SND3AD
        DEF  SND1VL,SND2VL,SND3VL
 *
-       DEF  BUTTON
+       DEF  KEYTIM,CURKEY,PRVKEY
 *
        DEF  PRVTCK,NXTTCK
 *
@@ -29,14 +29,14 @@ STACK
 * MUSIC Variables
 *
 SND1TM BSS  2             Remaining time for current note in sound generator 1
-SND2TM BSS  2             Remaining time for current note in sound generator 2
-SND3TM BSS  2             Remaining time for current note in sound generator 2
-SND1AD BSS  2             Address of next note for sound generator 1
-SND2AD BSS  2             Address of next note for sound generator 2
-SND3AD BSS  2             Address of next note for sound generator 2
+SND1AD BSS  2             Address of next note
 SND1VL BSS  2             Current Volume
-SND2VL BSS  2             "
-SND3VL BSS  2             "
+SND2TM BSS  2             Remaining time for current note in sound generator 2
+SND2AD BSS  2             Address of next note
+SND2VL BSS  2             Current Volume
+SND3AD BSS  2             Address of next note for sound generator 2
+SND3TM BSS  2             Remaining time for current note
+SND3VL BSS  2             Current Volume
 *
 * Timer variables
 *
@@ -45,7 +45,9 @@ NXTTCK BSS  2
 *
 * KSCAN Variable
 *
-BUTTON BSS  2             Boolean flags for buttons
+KEYTIM BSS  2             Time to wait before accepting repeated key
+CURKEY BSS  1             Ascii for most recent key
+PRVKEY BSS  1             Ascii for prev key
 
 *
 * Skip 8 bytes at >8378, used for GPL status block
