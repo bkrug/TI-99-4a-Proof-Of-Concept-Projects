@@ -13,6 +13,7 @@ SGADR  EQU  >8400
 SNDTIM EQU  2
 SNDVOL EQU  4
 ONE    BYTE >01
+NOVOL  BYTE >0F
        EVEN
 
 *
@@ -90,6 +91,8 @@ REPTMS INC  @SNDTIM(R3)
 * R3 - address of address of the next piece of data for sound generator
 * R8 - used to change the generator's volume
 PLYONE
+       DECT R10
+       MOV  R11,*R10
 * Let R1 = address of current note
        MOV  *R3,R1
 * If R1 = 0, then skip
@@ -122,7 +125,25 @@ TONE   MOVB *R1,R2
 *
 * Select Envelope
 *
-ENVELP B     @ENV2
+ENVELP 
+* Let R4 = SNDVOL(R3)
+       MOV  R3,R4
+       AI   R4,SNDVOL
+* Let envelope select volume
+       BL   @ENV1
+* Set new volume
+       AB   @SNDVOL(R3),R8
+       MOVB R8,*R0
+*
+       MOV  *R10+,R11
+       RT
+
+*
+* Paus routine
+*
+PAUS   AI   R8,>F00
+       MOVB R8,*R0
+       RT
 
 *
 * Envelope 0
@@ -133,11 +154,10 @@ ENV0
        C    *R1,@RESTVL
        JNE  ENV0A
 * Yes, turn off sound
-       AI   R8,>F00
-       MOVB R8,*R0
+       MOVB @NOVOL,*R4
        RT
 * No, turn volume to top
-ENV0A  MOVB R8,*R0
+ENV0A  SB   *R4,*R4
        RT
 
 *
@@ -147,45 +167,45 @@ ENV0A  MOVB R8,*R0
 ENV1
 * Is this a rest?
        C    *R1,@RESTVL
-       JEQ  PAUS
+       JEQ  ENV1A
 * No, are we at end of note
        C    @SNDTIM(R3),@NTPAUS
-       JH   ENV1A
+       JH   ENV1B
 * Yes, turn off sound
-PAUS   AI   R8,>F00
-       MOVB R8,*R0
+ENV1A  MOVB @NOVOL,*R4
        RT
 * No, turn volume to top
-ENV1A  MOVB R8,*R0
+ENV1B  SB   *R4,*R4
        RT
 
 *
 * Envelope 2
-* Start a max volume, decrease during late cyles
+* Start at max volume, decrease during late cyles
 *
 NTDIM  DATA 16                      point at which to reduce the volume
 ENV2
+* Is this the begining of a note?
        C    @SNDTIM(R3),@2(R1)
        JNE  ENV2A
-* Set volume to peek and load Volume into sound address
-       CLR  @SNDVOL(R3)
-       AB   @SNDVOL(R3),R8
-       MOVB R8,*R0
+* Yes, is it a rest?
+       C    *R1,@RESTVL
+       JNE  ENV2Z
+* Yes, turn off sound
+       MOVB @NOVOL,*R4
+       RT
+* No, set volume to peek and load Volume into sound address
+ENV2Z  SB   *R4,*R4
        RT
 * Are we at end of note?
 ENV2A  C    @SNDTIM(R3),@NTPAUS
        JH   ENV2B
 * Yes, turn off sound
-       AI   R8,>F00
-       MOVB R8,*R0
+       MOVB @NOVOL,*R4
        RT
 * No, are we at point to dim volume?
 ENV2B  C    @SNDTIM(R3),@NTDIM
        JHE  ENV2C
 * Yes, decrease volume
-       AB   @ONE,@SNDVOL(R3)
-       AB   @SNDVOL(R3),R8
-       MOVB R8,*R0
-       RT
-* No, leave the volume alone
+       AB   @ONE,*R4
+* Set the volume
 ENV2C  RT
