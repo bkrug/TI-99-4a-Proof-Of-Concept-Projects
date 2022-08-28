@@ -5,6 +5,7 @@
        DEF  SND1VL,SND2VL,SND3VL
 *
        DEF  KEYTIM,CURKEY,PRVKEY
+       DEF  CURENV,TONSEL
 *
        DEF  PRVTCK,NXTTCK
 *
@@ -48,6 +49,11 @@ NXTTCK BSS  2
 KEYTIM BSS  2             Time to wait before accepting repeated key
 CURKEY BSS  1             Ascii for most recent key
 PRVKEY BSS  1             Ascii for prev key
+*
+* selected envelope and tone generators
+*
+CURENV BSS  2
+TONSEL BSS  2
 
 *
 * Skip 8 bytes at >8378, used for GPL status block

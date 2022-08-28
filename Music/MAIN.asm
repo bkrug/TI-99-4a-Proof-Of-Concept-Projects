@@ -4,6 +4,7 @@
        REF  PRVTCK,NXTTCK                   "
        REF  PLYINT,PLYMSC                   Ref from DIRMUSIC
        REF  KSCAN                           Ref from KSCAN
+       REF  PRCKEY                          Ref from SELECT
 
 ********@*****@*********************@**************************
 *--------------------------------------------------------------
@@ -70,6 +71,8 @@ WAIT1  BL   @GETTIM
 GAMELP
 * Scan keyboard
        BL   @KSCAN
+* Process scanned key
+       BL   @PRCKEY
 * Maybe change current note
        BL   @PLYMSC
 * Repeat
