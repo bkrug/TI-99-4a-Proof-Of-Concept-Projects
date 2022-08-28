@@ -3,6 +3,7 @@
        REF  SND1AD,SND2AD,SND3AD              Ref from VAR
        REF  SND1TM,SND2TM,SND3TM              "
        REF  SND1VL,SND2VL,SND3VL              "
+       REF  CURENV                            "
        REF  WINTR1,WINTR2,WINTR3              Ref from TUNEWINTER
 
 *
@@ -129,8 +130,13 @@ ENVELP
 * Let R4 = SNDVOL(R3)
        MOV  R3,R4
        AI   R4,SNDVOL
-* Let envelope select volume
-       BL   @ENV2
+* Let R5 = address of current envelope
+       MOV  @CURENV,R5
+       SLA  R5,1
+       AI   R5,ENVLST
+       MOV  *R5,R5
+* Call envelope to set the cur volume in *R4
+       BL   *R5
 * Set new volume
        AB   *R4,R8
        MOVB R8,*R0
@@ -144,6 +150,8 @@ ENVELP
 PAUS   AI   R8,>F00
        MOVB R8,*R0
        RT
+
+ENVLST DATA ENV0,ENV1,ENV2
 
 *
 * Envelope 0
