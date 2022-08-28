@@ -25,10 +25,13 @@ PLYINT
        MOV  R0,@SND2TM
        MOV  R0,@SND3TM
        LI   R0,WINTR1
+       AI   R0,-4
        MOV  R0,@SND1AD
        LI   R0,WINTR2
+       AI   R0,-4
        MOV  R0,@SND2AD
        LI   R0,WINTR3
+       AI   R0,-4
        MOV  R0,@SND3AD
        CLR  R0
        MOV  R0,@SND1VL
@@ -61,7 +64,6 @@ PLYMRT MOV  *R10+,R11
        RT
 
 NTPAUS DATA 2                       pause between notes (not same as a rest)
-NTDIM  DATA >F+2                    point at which to reduce the volume
 RESTVL DATA REST                    if this is in place of a tone, then do a rest
 STOPVL DATA STOP
 REPTVL DATA REPEAT
@@ -79,65 +81,111 @@ STOPMS CLR  *R3
 REPTMS INC  @SNDTIM(R3)
        INCT R1
        MOV  *R1,*R3
+       DECT *R3
+       DECT *R3       
 *
 * Check if a note has finished. If yes, then play a new one
 *
 * R0 - address to send sound generator data to
 * R3 - address of address of the next piece of data for sound generator
 * R8 - used to change the generator's volume
-PLYONE 
-* Let R1 = address of next note
+PLYONE
+* Let R1 = address of current note
        MOV  *R3,R1
 * If R1 = 0, then skip
        JEQ  PAUS
-* Play next note?
+* Look at next data?
        DEC  @SNDTIM(R3)
-       JEQ  NOTE
-       C    @SNDTIM(R3),@NTPAUS
-       JLE  PAUS
-       C    @SNDTIM(R3),@NTDIM
-       JLE  DIMVOL
-       JMP  PLYRT
-* Turn off sound generator between notes
-PAUS   AI   R8,>F00
-       MOVB R8,*R0
-       RT
-NOTE
+       JNE  ENVELP
+* Yes
+       AI   R1,4
 * Reached end of music loop?
-NOTE1  C    *R1,@REPTVL
+       C    *R1,@REPTVL
        JEQ  REPTMS
 * No, reached end of non-repeating music?
        C    *R1,@STOPVL
        JEQ  STOPMS
-* No, play tone or rest?
-       C    *R1,@RESTVL
-       JNE  TONE
-* Play rest. Turn off sound genrator
-       AI   R8,>F00
-       MOVB R8,*R0
-       INCT R1
-       JMP  TONE1
+*
 * Play tone.
+*
 * Load tone into sound address. Have to select generator, too.
-TONE   MOVB *R1+,R2
+TONE   MOVB *R1,R2
        AB   R8,R2
        AI   R2,->1000
        MOVB R2,*R0
        NOP
-       MOVB *R1+,*R0
+       MOVB @1(R1),*R0
+* Set remaining time
+       MOV  @2(R1),@SNDTIM(R3)
+* Update position within music data
+       MOV  R1,*R3
+*
+* Select Envelope
+*
+ENVELP B     @ENV2
+
+*
+* Envelope 0
+* Flat max volume. No paus between notes.
+*
+ENV0
+* Is this a rest?
+       C    *R1,@RESTVL
+       JNE  ENV0A
+* Yes, turn off sound
+       AI   R8,>F00
+       MOVB R8,*R0
+       RT
+* No, turn volume to top
+ENV0A  MOVB R8,*R0
+       RT
+
+*
+* Envelope 1
+* Flat max volume with short paus between notes
+*
+ENV1
+* Is this a rest?
+       C    *R1,@RESTVL
+       JEQ  PAUS
+* No, are we at end of note
+       C    @SNDTIM(R3),@NTPAUS
+       JH   ENV1A
+* Yes, turn off sound
+PAUS   AI   R8,>F00
+       MOVB R8,*R0
+       RT
+* No, turn volume to top
+ENV1A  MOVB R8,*R0
+       RT
+
+*
+* Envelope 2
+* Start a max volume, decrease during late cyles
+*
+NTDIM  DATA 16                      point at which to reduce the volume
+ENV2
+       C    @SNDTIM(R3),@2(R1)
+       JNE  ENV2A
 * Set volume to peek and load Volume into sound address
        CLR  @SNDVOL(R3)
        AB   @SNDVOL(R3),R8
        MOVB R8,*R0
-* Set remaining time
-TONE1  MOV  *R1+,@SNDTIM(R3)
-* Update position within music data
-       MOV  R1,*R3
-PLYRT  RT
-*
-* Reduce volume
-*
-DIMVOL AB   @ONE,@SNDVOL(R3)
+       RT
+* Are we at end of note?
+ENV2A  C    @SNDTIM(R3),@NTPAUS
+       JH   ENV2B
+* Yes, turn off sound
+       AI   R8,>F00
+       MOVB R8,*R0
+       RT
+* No, are we at point to dim volume?
+ENV2B  C    @SNDTIM(R3),@NTDIM
+       JHE  ENV2C
+* Yes, decrease volume
+       AB   @ONE,@SNDVOL(R3)
        AB   @SNDVOL(R3),R8
        MOVB R8,*R0
        RT
+* No, leave the volume alone
+ENV2C  RT

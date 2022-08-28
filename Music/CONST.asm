@@ -1,7 +1,7 @@
 *
 * Sound related
 *
-REST   EQU  >8FFF       Turn off sound generator for specified duration
+REST   EQU  >0002       Turn off sound generator for specified duration
 STOP   EQU  >CFFF       Stop playing a signal/tune at end
 REPEAT EQU  >CFFE       Play signal/tune as repeated loop
 *
