@@ -10,6 +10,8 @@
 *
 SGADR  EQU  >8400
        COPY 'CONST.asm'
+SNDTIM EQU  2
+SNDVOL EQU  4
 ONE    BYTE >01
        EVEN
 
@@ -44,20 +46,14 @@ PLYMSC DECT R10
        LI   R0,SGADR
 * Play from Tone Generator 1
        LI   R3,SND1AD
-       LI   R4,SND1TM
-       LI   R5,SND1VL
        LI   R8,>9000
        BL   @PLYONE
 * Play from Tone Generator 2
        LI   R3,SND2AD
-       LI   R4,SND2TM
-       LI   R5,SND2VL
        LI   R8,>B000
        BL   @PLYONE
 * Play from Tone Generator 3
        LI   R3,SND3AD
-       LI   R4,SND3TM
-       LI   R5,SND3VL
        LI   R8,>D000
        BL   @PLYONE
 *
@@ -80,7 +76,7 @@ STOPMS CLR  *R3
 *
 * Increase *R4 from 0 to 1, so that note plays right away
 * Put address of beginning of tune in *R3
-REPTMS INC  *R4
+REPTMS INC  @SNDTIM(R3)
        INCT R1
        MOV  *R1,*R3
 *
@@ -88,8 +84,6 @@ REPTMS INC  *R4
 *
 * R0 - address to send sound generator data to
 * R3 - address of address of the next piece of data for sound generator
-* R4 - address of address of the scheduled time to change generator tone
-* R5 - address of current volume
 * R8 - used to change the generator's volume
 PLYONE 
 * Let R1 = address of next note
@@ -97,11 +91,11 @@ PLYONE
 * If R1 = 0, then skip
        JEQ  PAUS
 * Play next note?
-       DEC  *R4
+       DEC  @SNDTIM(R3)
        JEQ  NOTE
-       C    *R4,@NTPAUS
+       C    @SNDTIM(R3),@NTPAUS
        JLE  PAUS
-       C    *R4,@NTDIM
+       C    @SNDTIM(R3),@NTDIM
        JLE  DIMVOL
        JMP  PLYRT
 * Turn off sound generator between notes
@@ -132,18 +126,18 @@ TONE   MOVB *R1+,R2
        NOP
        MOVB *R1+,*R0
 * Set volume to peek and load Volume into sound address
-       CLR  *R5
-       AB   *R5,R8
+       CLR  @SNDVOL(R3)
+       AB   @SNDVOL(R3),R8
        MOVB R8,*R0
 * Set remaining time
-TONE1  MOV  *R1+,*R4
+TONE1  MOV  *R1+,@SNDTIM(R3)
 * Update position within music data
        MOV  R1,*R3
 PLYRT  RT
 *
 * Reduce volume
 *
-DIMVOL AB   @ONE,*R5
-       AB   *R5,R8
+DIMVOL AB   @ONE,@SNDVOL(R3)
+       AB   @SNDVOL(R3),R8
        MOVB R8,*R0
        RT

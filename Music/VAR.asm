@@ -28,13 +28,13 @@ STACK
 *
 * MUSIC Variables
 *
-SND1TM BSS  2             Remaining time for current note in sound generator 1
-SND1AD BSS  2             Address of next note
+SND1AD BSS  2             Address of next note in sound generator 1
+SND1TM BSS  2             Remaining time for current note
 SND1VL BSS  2             Current Volume
-SND2TM BSS  2             Remaining time for current note in sound generator 2
-SND2AD BSS  2             Address of next note
+SND2AD BSS  2             Address of next note in sound generator 2
+SND2TM BSS  2             Remaining time for current note
 SND2VL BSS  2             Current Volume
-SND3AD BSS  2             Address of next note for sound generator 2
+SND3AD BSS  2             Address of next note for sound generator 3
 SND3TM BSS  2             Remaining time for current note
 SND3VL BSS  2             Current Volume
 *
