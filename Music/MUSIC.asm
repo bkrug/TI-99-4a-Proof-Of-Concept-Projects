@@ -39,6 +39,9 @@ PLYINT
        MOV  R0,@SND1VL
        MOV  R0,@SND2VL
        MOV  R0,@SND3VL
+* Select default envelope
+       CLR  @CURENV
+       INC  @CURENV
 *
        RT
 
@@ -151,7 +154,7 @@ PAUS   AI   R8,>F00
        MOVB R8,*R0
        RT
 
-ENVLST DATA ENV0,ENV1,ENV2
+ENVLST DATA ENV0,ENV1,ENV2,ENV3
 
 *
 * Envelope 0
@@ -188,7 +191,7 @@ ENV1B  SB   *R4,*R4
 
 *
 * Envelope 2
-* Start at max volume, decrease during late cyles
+* Sustain, Release
 *
 NTDIM  DATA 16                      point at which to reduce the volume
 ENV2
@@ -214,3 +217,47 @@ ENV2B  C    @SNDTIM(R3),@NTDIM
        AB   @ONE,*R4
 * Set the volume
 ENV2C  RT
+
+*
+* Envelope 3
+* Attack, Release
+*
+ENV3
+* Is this a rest?
+       C    *R1,@RESTVL
+       JNE  ENV3M
+* Yes, turn off volume
+       MOVB @NOVOL,*R4
+       RT
+* Is this the begining of a note?
+ENV3M  C    @SNDTIM(R3),@2(R1)
+       JNE  ENV3B
+* Yes, set volume to either off or half the max time
+       MOV  @SNDTIM(R3),R5
+       SRL  R5,1
+       CI   R5,>F
+       JLE  ENV3A
+       LI   R5,>F
+ENV3A  SLA  R5,8
+       MOVB R5,*R4
+       RT
+* No, Let R6 = time to begin release
+ENV3B  MOV  @2(R1),R6
+       SRL  R6,1
+       CI   R6,>10
+       JL   ENV3C
+       MOV  @2(R1),R6
+       AI   R6,->10
+* Are we in attack mode?
+ENV3C  C    @SNDTIM(R3),R6
+       JLE  ENV3D
+* Yes, increase volume
+       SB   @ONE,*R4
+       RT
+* No, is volume already off?
+ENV3D  CB   *R4,@NOVOL
+       JEQ  ENV3RT
+* No, release
+       AB   @ONE,*R4
+*
+ENV3RT RT
