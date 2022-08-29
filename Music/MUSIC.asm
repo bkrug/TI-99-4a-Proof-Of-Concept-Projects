@@ -24,7 +24,6 @@ PLYINT
        DECT R10
        MOV  R11,*R10
 * Start Music
-       LI   R0,SGADR
        LI   R3,WINTR1
        MOV  R3,@SND1AD
        LI   R3,SND1AD
@@ -54,8 +53,6 @@ PLYINT
 *
 PLYMSC DECT R10
        MOV  R11,*R10
-* Store address of sound generator
-       LI   R0,SGADR
 * Play from Tone Generator 1
        LI   R3,SND1AD
        LI   R8,>9000
@@ -105,7 +102,6 @@ REPTMS MOV  @2(R1),*R3
 *
 * Check if a note has finished. If yes, then play a new one
 *
-* R0 - address to send sound generator data to
 * R3 - address of address of the next piece of data for sound generator
 * R8 - used to change the generator's volume
 PLYONE
@@ -133,9 +129,9 @@ PLY1   C    *R1,@REPTVL
 TONE   MOVB *R1,R2
        AB   R8,R2
        AI   R2,->1000
-       MOVB R2,*R0
+       MOVB R2,@SGADR
        NOP
-       MOVB @1(R1),*R0
+       MOVB @1(R1),@SGADR
 * Set remaining time
        MOV  @2(R1),@SNDTIM(R3)
 * Update position within music data
@@ -156,7 +152,7 @@ ENVELP
        BL   *R5
 * Set new volume
        AB   *R4,R8
-       MOVB R8,*R0
+       MOVB R8,@SGADR
 *
        MOV  *R10+,R11
        RT
@@ -165,7 +161,7 @@ ENVELP
 * Paus routine
 *
 PAUS   AI   R8,>F00
-       MOVB R8,*R0
+       MOVB R8,@SGADR
        RT
 
 ENVLST DATA ENV0,ENV1,ENV2,ENV3
