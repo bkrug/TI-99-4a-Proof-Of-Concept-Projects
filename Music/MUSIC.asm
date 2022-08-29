@@ -21,28 +21,32 @@ NOVOL  BYTE >0F
 * Initialize
 *
 PLYINT
+       DECT R10
+       MOV  R11,*R10
 * Start Music
-       LI   R0,1
-       MOV  R0,@SND1TM
-       MOV  R0,@SND2TM
-       MOV  R0,@SND3TM
-       LI   R0,WINTR1
-       AI   R0,-4
-       MOV  R0,@SND1AD
-       LI   R0,WINTR2
-       AI   R0,-4
-       MOV  R0,@SND2AD
-       LI   R0,WINTR3
-       AI   R0,-4
-       MOV  R0,@SND3AD
-       CLR  R0
-       MOV  R0,@SND1VL
-       MOV  R0,@SND2VL
-       MOV  R0,@SND3VL
+       LI   R0,SGADR
+       LI   R3,WINTR1
+       MOV  R3,@SND1AD
+       LI   R3,SND1AD
+       LI   R8,>9000       
+       BL   @STRTPL
+*
+       LI   R3,WINTR2
+       MOV  R3,@SND2AD
+       LI   R3,SND2AD
+       LI   R8,>B000     
+       BL   @STRTPL
+*
+       LI   R3,WINTR3
+       MOV  R3,@SND3AD
+       LI   R3,SND3AD
+       LI   R8,>D000      
+       BL   @STRTPL
 * Select default envelope
        CLR  @CURENV
        INC  @CURENV
 *
+       MOV  *R10+,R11
        RT
 
 *
@@ -79,15 +83,25 @@ REPTVL DATA REPEAT
 STOPMS CLR  *R3
        JMP  PAUS
 *
-* Loop to beginnign of tune, then run PLYONE routine like normal
+* Initialize stream of music for one tone generator
 *
-* Increase *R4 from 0 to 1, so that note plays right away
-* Put address of beginning of tune in *R3
-REPTMS INC  @SNDTIM(R3)
-       INCT R1
-       MOV  *R1,*R3
-       DECT *R3
-       DECT *R3       
+* R3 - address of address of the next piece of data for sound generator
+* R8 - used to change the generator's volume
+STRTPL
+       DECT R10
+       MOV  R11,*R10
+* Let R1 = address of current note
+       MOV  *R3,R1
+*
+       JMP  PLY1
+*
+* Loop to beginnign of tune for one tone generator
+*
+* R3 - address of address of the next piece of data for sound generator
+* R8 - used to change the generator's volume
+REPTMS MOV  @2(R1),*R3
+       MOV  *R3,R1
+       JMP  PLY1
 *
 * Check if a note has finished. If yes, then play a new one
 *
@@ -107,7 +121,7 @@ PLYONE
 * Yes
        AI   R1,4
 * Reached end of music loop?
-       C    *R1,@REPTVL
+PLY1   C    *R1,@REPTVL
        JEQ  REPTMS
 * No, reached end of non-repeating music?
        C    *R1,@STOPVL
