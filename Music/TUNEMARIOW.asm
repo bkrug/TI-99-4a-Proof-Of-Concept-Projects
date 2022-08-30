@@ -87,13 +87,13 @@ MW1
        DATA F2,N8
        DATA C3,N8
        DATA A2,N8+N16
-       DATA Bb2,N16
-       DATA Bb2,N4
+       DATA G2,N16
+       DATA G2,N4
 *
        DATA A2,N4
        DATA F2,N8+N16
        DATA C2,N16
-       DATA Bb2,N16
+       DATA D2,N16
        DATA F2,N8
        DATA F2,N8+N16
        DATA REST,N16
@@ -107,6 +107,32 @@ MW1
        DATA F2,N16
        DATA F2,N2
 * Measure 12
+       DATA A2,N8+N16
+       DATA F2,N8+N16
+       DATA C2,N8
+       DATA A2,N8+N16
+       DATA F2,N16
+       DATA F2,N4
+*
+       DATA Ab2,N16
+       DATA F2,N16
+       DATA C2,N8
+       DATA Ab2,N8+N16
+       DATA G2,N16
+       DATA G2,N2
+*
+       DATA A2,N8+N16
+       DATA F2,N8+N16
+       DATA C2,N8
+       DATA A2,N8+N16
+       DATA F2,N16
+       DATA F2,N4
+*
+       DATA Ab2,N16
+       DATA F2,N16
+       DATA C2,N8
+       DATA C3,N2+N4
+* Measure 16
        DATA REPEAT,MW1
 
 MWRLD2
@@ -148,6 +174,12 @@ MW2
 *
        DATA REST,NDBL
 * Measure 12
+*
+       DATA REST,NDBL
+*
+*
+       DATA REST,NDBL
+* Measure 16
        DATA REPEAT,MW2
 
 MWRLD3
@@ -216,6 +248,42 @@ MW3
        DATA F1,N8
        DATA C1,N8
 * Measure 12
+       DATA Bb1,N8
+       DATA B1,N8
+       DATA C2,N8
+       DATA D2,N8
+       DATA C2,N8
+       DATA A1,N8
+       DATA F1,N8
+       DATA A1,N8
+*
+       DATA Bb1,N8
+       DATA B1,N8
+       DATA C2,N8
+       DATA D2,N8
+       DATA F2,N8
+       DATA E2,N8
+       DATA C2,N8
+       DATA Bb1,N8
+*
+       DATA Bb1,N8
+       DATA A1,N8
+       DATA Bb1,N8
+       DATA C2,N8
+       DATA D2,N8
+       DATA F2,N8
+       DATA D2,N8
+       DATA Bb1,N8
+*
+       DATA C2,N8
+       DATA D2,N8
+       DATA F2,N8
+       DATA C2,N8
+       DATA Bb2,N8
+       DATA A2,N8
+       DATA Bb2,N8
+       DATA G2,N8
+* Measure 16
        DATA REPEAT,MW3
 
        END
