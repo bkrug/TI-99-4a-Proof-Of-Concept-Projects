@@ -164,7 +164,7 @@ PAUS   AI   R8,>F00
        MOVB R8,@SGADR
        RT
 
-ENVLST DATA ENV0,ENV1,ENV2,ENV3
+ENVLST DATA ENV0,ENV1,ENV2,ENV3,ENV6
 
 *
 * Envelope 0
@@ -271,3 +271,24 @@ ENV3D  CB   *R4,@NOVOL
        AB   @ONE,*R4
 *
 ENV3RT RT
+
+*
+* Envelope 6
+* Changing volume
+*
+ENV6
+* Is this a rest?
+       C    *R1,@RESTVL
+       JEQ  ENV6A
+* No, are we at end of note
+       C    @SNDTIM(R3),@NTPAUS
+       JH   ENV6B
+* Yes, turn off sound
+ENV6A  MOVB @NOVOL,*R4
+       RT
+* No, set volume acording to remaining time
+ENV6B  MOV  @SNDTIM(R3),R5
+       ANDI R5,7
+       SLA  R5,8
+       MOVB R5,*R4
+       RT

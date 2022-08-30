@@ -4,7 +4,7 @@
 
 * Range of keys that can select an envelope
 LOWENV BYTE 'A'
-HGHENV BYTE 'D'
+HGHENV BYTE 'E'
 
 *
 * Public Method: Process Keys
