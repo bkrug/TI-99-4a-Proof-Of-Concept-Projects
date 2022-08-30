@@ -145,7 +145,7 @@ MW1
        DATA A2,N16
        DATA F2,N16
        DATA C2,N8
-       DATA D2,N8+16
+       DATA D2,N8+N16
        DATA F2,N2
        DATA D2,N16
 *
@@ -189,29 +189,13 @@ MW2
        DATA G2,N8
        DATA Gb2,N4+N8
 * Measure 4
-*
-       DATA REST,NDBL
-*
-*
-       DATA REST,NDBL
+       DATA REST,NDBL+NDBL
 * Measure 8
-*
-       DATA REST,NDBL
-*
-*
-       DATA REST,NDBL
+       DATA REST,NDBL+NDBL
 * Measure 12
-*
-       DATA REST,NDBL
-*
-*
-       DATA REST,NDBL
+       DATA REST,NDBL+NDBL
 * Measure 16
-*
-       DATA REST,NDBL
-*
-*
-       DATA REST,NDBL
+       DATA REST,NDBL+NDBL
 * Measure 20
        DATA REPEAT,MW2
 
