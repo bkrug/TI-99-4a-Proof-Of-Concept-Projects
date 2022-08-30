@@ -133,6 +133,33 @@ MW1
        DATA C2,N8
        DATA C3,N2+N4
 * Measure 16
+       DATA A2,N4
+       DATA F2,N8+N16
+       DATA C2,N16
+       DATA D2,N16
+       DATA F2,N8
+       DATA F2,N8+N16
+       DATA REST,N16
+       DATA G2,N16
+*
+       DATA A2,N16
+       DATA F2,N16
+       DATA C2,N8
+       DATA D2,N8+16
+       DATA F2,N2
+       DATA D2,N16
+*
+       DATA C3,N8
+       DATA D3,N8
+       DATA C3,N8
+       DATA D3,N8
+       DATA C3,N4
+       DATA Bb2,N16
+       DATA A2,N16
+       DATA G2,N8
+*
+       DATA F2,N1
+* Measure 20
        DATA REPEAT,MW1
 
 MWRLD2
@@ -180,6 +207,12 @@ MW2
 *
        DATA REST,NDBL
 * Measure 16
+*
+       DATA REST,NDBL
+*
+*
+       DATA REST,NDBL
+* Measure 20
        DATA REPEAT,MW2
 
 MWRLD3
@@ -284,6 +317,24 @@ MW3
        DATA Bb2,N8
        DATA G2,N8
 * Measure 16
+       DATA F1,N4
+       DATA F1,N4
+       DATA Eb1,N4
+       DATA Eb1,N4
+*
+       DATA D1,N4
+       DATA D1,N4
+       DATA Cs1,N4
+       DATA Cs1,N4
+*
+       DATA F1,N4
+       DATA REST,N4+N2
+*
+       DATA F2,N4
+       DATA C2,N4
+       DATA F2,N4
+       DATA F2,N4
+* Measure 20
        DATA REPEAT,MW3
 
        END
