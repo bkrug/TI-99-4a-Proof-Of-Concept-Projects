@@ -1,10 +1,8 @@
        DEF  PLYINT,PLYMSC
 *
        REF  SND1AD,SND2AD,SND3AD              Ref from VAR
-       REF  SND1TM,SND2TM,SND3TM              "
-       REF  SND1VL,SND2VL,SND3VL              "
        REF  CURENV                            "
-       REF  WINTR1,WINTR2,WINTR3              Ref from TUNEWINTER
+       REF  MWRLD1,MWRLD2,MWRLD3              Ref from TUNEWINTER
 
 *
 * Constants
@@ -28,19 +26,19 @@ PLYINT
        DECT R10
        MOV  R11,*R10
 * Start Music
-       LI   R3,WINTR1
+       LI   R3,MWRLD1
        MOV  R3,@SND1AD
        LI   R3,SND1AD
        LI   R8,>9000       
        BL   @STRTPL
 *
-       LI   R3,WINTR2
+       LI   R3,MWRLD2
        MOV  R3,@SND2AD
        LI   R3,SND2AD
        LI   R8,>B000     
        BL   @STRTPL
 *
-       LI   R3,WINTR3
+       LI   R3,MWRLD3
        MOV  R3,@SND3AD
        LI   R3,SND3AD
        LI   R8,>D000      

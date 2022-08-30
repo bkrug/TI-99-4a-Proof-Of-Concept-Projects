@@ -1,4 +1,4 @@
-       DEF  WINTR1,WINTR2,WINTR3
+       DEF  MWRLD1,MWRLD2,MWRLD3
 
        COPY 'NOTEVAL.asm'
        COPY 'CONST.asm'
@@ -7,7 +7,6 @@
 * https://musescore.com/thenewmaestro/scores/51866
 * Super Mario World Overworld Theme
 MWRLD1
-WINTR1
 * 4/4
        DATA D3,N4
        DATA Bb2,N8+N16
@@ -74,10 +73,43 @@ MW1
        DATA F2,N16
        DATA F2,N2
 * Measure 8
+       DATA A2,N4
+       DATA F2,N8+N16
+       DATA C2,N16
+       DATA D2,N16
+       DATA F2,N8
+       DATA F2,N8+N16
+       DATA REST,N16
+       DATA D2,N16
+*
+       DATA C2,N8
+       DATA F2,N8
+       DATA F2,N8
+       DATA C3,N8
+       DATA A2,N8+N16
+       DATA Bb2,N16
+       DATA Bb2,N4
+*
+       DATA A2,N4
+       DATA F2,N8+N16
+       DATA C2,N16
+       DATA Bb2,N16
+       DATA F2,N8
+       DATA F2,N8+N16
+       DATA REST,N16
+       DATA D2,N16
+*
+       DATA C2,N8
+       DATA F2,N8
+       DATA Bb2,N16
+       DATA A2,N16
+       DATA G2,N16
+       DATA F2,N16
+       DATA F2,N2
+* Measure 12
        DATA REPEAT,MW1
 
 MWRLD2
-WINTR2
 * 4/4
        DATA REST,N1
 *
@@ -110,10 +142,15 @@ MW2
 *
        DATA REST,NDBL
 * Measure 8
+*
+       DATA REST,NDBL
+*
+*
+       DATA REST,NDBL
+* Measure 12
        DATA REPEAT,MW2
 
 MWRLD3
-WINTR3
 * 4/4
        DATA REST,N1
 *
@@ -153,6 +190,32 @@ MW3
        DATA D1,N8
        DATA F1,N4
 * Measure 8
+       DATA F1,N4
+       DATA A1,N4
+       DATA Bb1,N4
+       DATA B1,N4
+*
+       DATA A1,N4
+       DATA Ab1,N4
+       DATA G1,N8
+       DATA D1,N8
+       DATA E1,N8
+       DATA F1,N8
+*
+       DATA F1,N4
+       DATA A1,N4
+       DATA Bb1,N4
+       DATA B1,N4
+*
+       DATA C2,N8
+       DATA D1,N8
+       DATA E1,N8
+       DATA G1,N8
+       DATA F1,N8
+       DATA D1,N8
+       DATA F1,N8
+       DATA C1,N8
+* Measure 12
        DATA REPEAT,MW3
 
        END
