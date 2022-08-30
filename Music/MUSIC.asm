@@ -163,7 +163,8 @@ REPTMS MOV  @2(R1),*R3
        MOV  *R3,R1
        JMP  PLY1
 
-ENVLST DATA ENV0,ENV1,ENV2,ENV3,ENV4,ENV5,ENV6
+ENVLST DATA ENV0,ENV1,ENV2,ENV3
+       DATA ENV4,ENV5,ENV6,ENV7
 
 *
 * Envelope 0
@@ -369,7 +370,7 @@ ENV5F  AB   @ONE,*R4
 
 *
 * Envelope 6
-* Changing volume
+* Attacks 8 times, then returns to mid-level
 *
 ENV6
 * Is this a rest?
@@ -384,6 +385,29 @@ ENV6A  MOVB @NOVOL,*R4
 * No, set volume acording to remaining time
 ENV6B  MOV  @SNDTIM(R3),R5
        ANDI R5,7
+       SLA  R5,8
+       MOVB R5,*R4
+       RT
+
+*
+* Envelope 7
+* Goes up and down by 8 positions
+*
+ENV7
+* Is this a rest?
+       C    *R1,@RESTVL
+       JEQ  ENV7A
+* No, are we at end of note
+       C    @SNDTIM(R3),@NTPAUS
+       JH   ENV7B
+* Yes, turn off sound
+ENV7A  MOVB @NOVOL,*R4
+       RT
+* No, set volume acording to remaining time
+ENV7B  MOV  @SNDTIM(R3),R5
+       ANDI R5,15
+       AI   R5,-8
+       ABS  R5
        SLA  R5,8
        MOVB R5,*R4
        RT
