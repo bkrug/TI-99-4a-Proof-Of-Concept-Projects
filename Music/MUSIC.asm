@@ -73,12 +73,7 @@ NTPAUS DATA 2                       pause between notes (not same as a rest)
 RESTVL DATA REST                    if this is in place of a tone, then do a rest
 STOPVL DATA STOP
 REPTVL DATA REPEAT
-*
-* Stop non-repeating music
-* Then turn-off sound generator
-*
-STOPMS CLR  *R3
-       JMP  PAUS
+
 *
 * Initialize stream of music for one tone generator
 *
@@ -91,14 +86,7 @@ STRTPL
        MOV  *R3,R1
 *
        JMP  PLY1
-*
-* Loop to beginnign of tune for one tone generator
-*
-* R3 - address of address of the next piece of data for sound generator
-* R8 - used to change the generator's volume
-REPTMS MOV  @2(R1),*R3
-       MOV  *R3,R1
-       JMP  PLY1
+
 *
 * Check if a note has finished. If yes, then play a new one
 *
@@ -110,7 +98,7 @@ PLYONE
 * Let R1 = address of current note
        MOV  *R3,R1
 * If R1 = 0, then skip
-       JEQ  PAUS
+       JEQ  STOPMS
 * Look at next data?
        DEC  @SNDTIM(R3)
        JNE  ENVELP
@@ -158,11 +146,20 @@ ENVELP
        RT
 
 *
-* Paus routine
+* Stop non-repeating music
+* Then turn-off sound generator
 *
+STOPMS CLR  *R3
 PAUS   AI   R8,>F00
        MOVB R8,@SGADR
        RT
+
+*
+* Loop to beginnign of tune for one tone generator
+*
+REPTMS MOV  @2(R1),*R3
+       MOV  *R3,R1
+       JMP  PLY1
 
 ENVLST DATA ENV0,ENV1,ENV2,ENV3,ENV6
 
