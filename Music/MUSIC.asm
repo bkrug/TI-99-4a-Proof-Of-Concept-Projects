@@ -13,8 +13,12 @@ SGADR  EQU  >8400
        COPY 'CONST.asm'
 SNDTIM EQU  2
 SNDVOL EQU  4
-ONE    BYTE >01
+*
+       EVEN
+EIGHT  DATA >08
+FIFTEN BYTE 0
 NOVOL  BYTE >0F
+ONE    BYTE >01
        EVEN
 
 *
@@ -161,7 +165,7 @@ REPTMS MOV  @2(R1),*R3
        MOV  *R3,R1
        JMP  PLY1
 
-ENVLST DATA ENV0,ENV1,ENV2,ENV3,ENV6
+ENVLST DATA ENV0,ENV1,ENV2,ENV3,ENV4,ENV5,ENV6
 
 *
 * Envelope 0
@@ -268,6 +272,102 @@ ENV3D  CB   *R4,@NOVOL
        AB   @ONE,*R4
 *
 ENV3RT RT
+
+*
+* Envelope 4
+* Attack, Sustain, Release
+*
+ENV4
+* Is this a rest?
+       C    *R1,@RESTVL
+       JNE  ENV4A
+* Yes, turn off volume
+       MOVB @NOVOL,*R4
+       RT
+* Is this the begining of a note?
+ENV4A  C    @SNDTIM(R3),@2(R1)
+       JNE  ENV4C
+* Yes, set volume to either off or half the max time
+       MOV  @SNDTIM(R3),R5
+       SRL  R5,1
+       CI   R5,>F
+       JLE  ENV4B
+       LI   R5,>F
+ENV4B  SLA  R5,8
+       MOVB R5,*R4
+       RT
+* No, Let R6 = time to end attack
+ENV4C  MOV  @2(R1),R6
+       SRL  R6,1
+       CI   R6,>10
+       JL   ENV4D
+       MOV  @2(R1),R6
+       AI   R6,->10
+* Are we in attack mode?
+ENV4D  C    @SNDTIM(R3),R6
+       JLE  ENV4E
+* Yes, increase volume
+       SB   @ONE,*R4
+       RT
+* No, are we in release mode?
+ENV4E  C    @SNDTIM(R3),@FIFTEN
+       JL   ENV4F
+* No, set volume to max
+       SB   *R4,*R4
+       RT
+* Yes, decrease volume
+ENV4F  AB   @ONE,*R4
+       RT
+
+*
+* Envelope 5
+* Attack, Decay, Sustain, Release
+*
+ENV5
+* Is this a rest?
+       C    *R1,@RESTVL
+       JNE  ENV5A
+* Yes, turn off volume
+       MOVB @NOVOL,*R4
+       RT
+* Is this the begining of a note?
+ENV5A  C    @SNDTIM(R3),@2(R1)
+       JNE  ENV5C
+* Yes, set volume to either off or half the max time
+       MOV  @SNDTIM(R3),R5
+       SRL  R5,1
+       CI   R5,>F
+       JLE  ENV5B
+       LI   R5,>F
+ENV5B  SLA  R5,8
+       MOVB R5,*R4
+       RT
+* No, Let R6 = time to end attack
+ENV5C  MOV  @2(R1),R6
+       SRL  R6,1
+       CI   R6,>10
+       JL   ENV5D
+       MOV  @2(R1),R6
+       AI   R6,->10
+* Are we in attack mode?
+ENV5D  C    @SNDTIM(R3),R6
+       JLE  ENV5E
+* Yes, increase volume
+       SB   @ONE,*R4
+       RT
+* No, are we in decay mode?
+ENV5E  AI   R6,->8
+       C    @SNDTIM(R3),R6
+       JH   ENV5F
+* No, are we in release mode?
+       C    @SNDTIM(R3),@EIGHT
+       JL   ENV5F
+* No, set volume to max
+       SB   *R4,*R4
+       RT
+* Yes, decrease volume
+ENV5F  AB   @ONE,*R4
+       RT
 
 *
 * Envelope 6
