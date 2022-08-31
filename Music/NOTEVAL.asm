@@ -3,8 +3,7 @@
 *
 * The smallest not should be set to a multiple of 3.
 * Otherwise Trippletes will get tone generators out of sync.
-N64    EQU  3
-N32    EQU  N64*2
+N32    EQU  3
 N16    EQU  N32*2
 N8     EQU  N16*2
 N4     EQU  N8*2

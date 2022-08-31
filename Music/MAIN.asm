@@ -40,31 +40,17 @@ BEGIN
 *
        BL   @PLYINT              Music variables
 *
-* Initialize timer
-*
-       BL   @BEGTIM
-       BL   @GETTIM
-       MOV  R2,@NXTTCK
-*
 * Wait
 *
-WAIT   MOV  @NXTTCK,@PRVTCK
-       S    @TCKLN,@NXTTCK
-       C    @NXTTCK,@PRVTCK
-       JL   WAIT1
-* Wait loop when NXTTCK is higher than PRVTCK
-WAIT2  BL   @GETTIM
-       C    R2,@NXTTCK
-       JH   WAIT2
-       C    R2,@PRVTCK
-       JL   WAIT2
-       JMP  GAMELP
-* Wait loop when NXTTCK is lower than PRVTCK
-WAIT1  BL   @GETTIM
-       C    R2,@NXTTCK
-       JL   GAMELP
-       C    R2,@PRVTCK
-       JLE  WAIT1       
+* Let R0 = most recently read VDP time
+WAIT   MOVB @VINTTM,R0
+* Turn on VDP interrupts
+       LIMI 2
+* Wait for VDP interupt
+WAITLP CB   @VINTTM,R0
+       JEQ  WAITLP
+* Turn off interrupts so we can write to VDP
+       LIMI 0      
 *
 * Game Loop
 *
@@ -87,30 +73,3 @@ GAMELP
 * Store this in the 14-leftmost bits
 *
 TCKLN  DATA 350*4
-
-*
-* Private Method:
-* Initialize Timer
-*
-BEGTIM
-       CLR  R12         CRU base of the TMS9901
-       SBO  0           Enter timer mode
-       LI   R1,>3FFF    Maximum value
-       INCT R12         Address of bit 1
-       LDCR R1,14       Load value
-       DECT R12         There is a faster way (see http://www.nouspikel.com/ti99/titechpages.htm)
-       SBZ  0           Exit clock mode, start decrementer
-       RT
-
-*
-* Private Method:
-* Get Time from CRU
-* Output: R2 - leftmost 14 bits contains time
-*
-GETTIM CLR  R12
-       SBO  0           Enter timer mode
-       STCR R2,15       Read current value (plus mode bit)
-       SBZ  0
-       SRL  R2,1        Get rid of mode bit
-       SLA  R2,2
-       RT
