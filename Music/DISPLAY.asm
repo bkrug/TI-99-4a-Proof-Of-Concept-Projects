@@ -1,6 +1,8 @@
-       DEF  DSPINT
+       DEF  DSPINT,DSPENV
+*
        REF  VDPADR,VDPWRT
        REF  PAT96
+       REF  CURENV
 
 HEADER TEXT 'ENVELOPE DEMO'
 HEAD0
@@ -69,6 +71,24 @@ MSGLP  AI   R3,>20
 *
        CI   R2,MSGEND
        JL   MSGLP
+*
+       MOV  *R10+,R11
+       RT
+
+*
+* Display current envelope
+*
+DSPENV
+       DECT R10
+       MOV  R11,*R10
+*
+       LI   R0,>58
+       BL   @VDPADR
+*
+       MOV  @CURENV,R1
+       AI   R1,'A'
+       SWPB R1
+       MOVB R1,@VDPWD
 *
        MOV  *R10+,R11
        RT

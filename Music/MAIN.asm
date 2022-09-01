@@ -5,7 +5,7 @@
        REF  PLYINT,PLYMSC                   Ref from DIRMUSIC
        REF  KSCAN                           Ref from KSCAN
        REF  PRCKEY                          Ref from SELECT
-       REF  DSPINT                          Ref from DISPLAY
+       REF  DSPINT,DSPENV                   Ref from DISPLAY
 
 ********@*****@*********************@**************************
 *--------------------------------------------------------------
@@ -61,6 +61,8 @@ GAMELP
        BL   @KSCAN
 * Process scanned key
        BL   @PRCKEY
+* Display Current Envelope
+       BL   @DSPENV
 * Maybe change current note
        BL   @PLYMSC
 * Repeat
