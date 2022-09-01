@@ -1,7 +1,7 @@
        DEF  KSCAN
 *
        REF  KEYTIM,CURKEY,PRVKEY
-*       REF  VDPREG
+       REF  VDPREG
 
 *
 * Constants
@@ -112,9 +112,8 @@ KD1    MOVB *R4,@CURKEY
        LI   R1,-5*MINUTE
        MOV  R1,@VSAVER
 * If screen currently off, redisplay it
-*       LI   R0,VDP1DF
-*       BL   @VDPREG
-*
+       LI   R0,VDP1DF
+       BL   @VDPREG
 
 KEYRT
        MOV  *R10+,R11

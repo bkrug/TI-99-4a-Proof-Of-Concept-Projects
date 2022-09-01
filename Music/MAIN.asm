@@ -5,6 +5,7 @@
        REF  PLYINT,PLYMSC                   Ref from DIRMUSIC
        REF  KSCAN                           Ref from KSCAN
        REF  PRCKEY                          Ref from SELECT
+       REF  DSPINT                          Ref from DISPLAY
 
 ********@*****@*********************@**************************
 *--------------------------------------------------------------
@@ -38,6 +39,7 @@ BEGIN
 *
 * Variable initialization routines
 *
+       BL   @DSPINT              Write instructions to screen
        BL   @PLYINT              Music variables
 *
 * Wait

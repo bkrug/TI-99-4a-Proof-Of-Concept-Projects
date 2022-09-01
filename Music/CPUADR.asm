@@ -1,3 +1,5 @@
+FAC    EQU  >834A        GPL parameter (word)
+STATUS EQU  >837C        GPL status (byte)
 VINTTM EQU  >8379        VDP Interrupt timer (byte)
 VSAVER EQU  >83D6        Screen Saver timer address (word)
 *
