@@ -1,0 +1,32 @@
+       DEF  START
+       REF  GPLLNK
+       REF  VMBW
+
+MSG1   TEXT 'I am the very model of a '
+       TEXT 'modern major general. ABC'
+MSG2
+
+FAC    EQU  >834A
+STATUS EQU  >837C
+
+* Place these at >900
+STDCHR EQU  >0016       * This loads the big letters used in some games
+SMLCHR EQU  >0018       * This loads the capital letters used in TI-WRITER or Basic
+* Place this at >B00
+LWRCHR EQU  >004A       * This loads the lower-case used in TI-WRITER or Basic
+
+START  LI   R0,0
+       LI   R1,MSG1
+       LI   R2,MSG2-MSG1
+       BLWP @VMBW
+* Load the lower case set
+       LI   R1,>0B00
+       MOV  R1,@FAC
+       CLR  R1
+       MOVB R1,@STATUS
+       BLWP @GPLLNK
+       DATA LWRCHR
+*
+       LIMI 2
+JMP    JMP  JMP
+       END
