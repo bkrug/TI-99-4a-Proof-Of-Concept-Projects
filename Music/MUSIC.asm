@@ -165,6 +165,7 @@ REPTMS MOV  @2(R1),*R3
 
 ENVLST DATA ENV0,ENV1,ENV2,ENV3
        DATA ENV4,ENV5,ENV6,ENV7
+       DATA ENV8
 
 *
 * Envelope 0
@@ -408,6 +409,28 @@ ENV7B  MOV  @SNDTIM(R3),R5
        ANDI R5,15
        AI   R5,-8
        ABS  R5
+       SLA  R5,8
+       MOVB R5,*R4
+       RT
+
+*
+* Envelope 8
+* Flat high, Flat low
+*
+ENV8
+* Is this a rest?
+       C    *R1,@RESTVL
+       JEQ  ENV8A
+* No, are we at end of note
+       C    @SNDTIM(R3),@NTPAUS
+       JH   ENV8B
+* Yes, turn off sound
+ENV8A  MOVB @NOVOL,*R4
+       RT
+* No, set volume acording to remaining time
+ENV8B  MOV  @SNDTIM(R3),R5
+       ANDI R5,8
+       SRL  R5,1
        SLA  R5,8
        MOVB R5,*R4
        RT
