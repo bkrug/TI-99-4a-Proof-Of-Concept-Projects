@@ -63,13 +63,3 @@ GAMELP
        BL   @PLYMSC
 * Repeat
        JMP  WAIT
-
-*
-* A CRU tick = 21.3 microseconds
-* For this program a music tick is 1/3 as long as a 1/64th note.
-* If one beat = 1/4 note,
-* then at 132 PBM, a music tick = 9.4696969 milliseconds.
-* Therefore, a music tick = 445 CRU ticks.
-* Store this in the 14-leftmost bits
-*
-TCKLN  DATA 350*4
