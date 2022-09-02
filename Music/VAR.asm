@@ -1,8 +1,6 @@
        DEF  STACK,WS
 *
-       DEF  SND1TM,SND2TM,SND3TM
        DEF  SND1AD,SND2AD,SND3AD
-       DEF  SND1VL,SND2VL,SND3VL
 *
        DEF  KEYTIM,CURKEY,PRVKEY
        DEF  CURENV,TONSEL
@@ -30,14 +28,14 @@ STACK
 * MUSIC Variables
 *
 SND1AD BSS  2             Address of next note in sound generator 1
-SND1TM BSS  2             Remaining time for current note
-SND1VL BSS  2             Current Volume
+       BSS  2             Remaining time for current note
+       BSS  2             Current Volume
 SND2AD BSS  2             Address of next note in sound generator 2
-SND2TM BSS  2             Remaining time for current note
-SND2VL BSS  2             Current Volume
+       BSS  2             Remaining time for current note
+       BSS  2             Current Volume
 SND3AD BSS  2             Address of next note for sound generator 3
-SND3TM BSS  2             Remaining time for current note
-SND3VL BSS  2             Current Volume
+       BSS  2             Remaining time for current note
+       BSS  2             Current Volume
 *
 * Timer variables
 *
