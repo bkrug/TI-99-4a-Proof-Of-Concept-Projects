@@ -29,13 +29,16 @@ STACK
 *
 SND1AD BSS  2             Address of next note in sound generator 1
        BSS  2             Remaining time for current note
-       BSS  2             Current Volume
+       BSS  1             Current Volume
+       BSS  1             (unused)
 SND2AD BSS  2             Address of next note in sound generator 2
        BSS  2             Remaining time for current note
-       BSS  2             Current Volume
+       BSS  1             Current Volume
+       BSS  1             (unused)
 SND3AD BSS  2             Address of next note for sound generator 3
        BSS  2             Remaining time for current note
-       BSS  2             Current Volume
+       BSS  1             Current Volume
+       BSS  1             (unused)
 *
 * Timer variables
 *
