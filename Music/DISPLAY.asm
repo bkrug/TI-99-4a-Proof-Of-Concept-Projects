@@ -1,7 +1,6 @@
        DEF  DSPINT,DSPENV
 *
        REF  VDPADR,VDPWRT
-       REF  PAT96
        REF  CURENV
 
 HEADER TEXT 'ENVELOPE DEMO'
@@ -37,12 +36,6 @@ MSGEND DATA MSG11
 DSPINT
        DECT R10
        MOV  R11,*R10
-*
-       LI   R0,>B00
-       BL   @VDPADR
-       LI   R0,PAT96
-       LI   R1,31*8
-       BL   @VDPWRT
 *
        LI   R0,10
        BL   @VDPADR
