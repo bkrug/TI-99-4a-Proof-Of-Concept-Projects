@@ -11,6 +11,10 @@ SGADR  EQU  >8400
        COPY 'CONST.asm'
 SNDTIM EQU  2
 SNDVOL EQU  4
+* Codes for different tone generators
+TGN1    EQU  >8000
+TGN2    EQU  >A000
+TGN3    EQU  >C000
 *
        EVEN
 EIGHT  DATA >08
@@ -30,19 +34,19 @@ PLYINT
        LI   R3,MWRLD1
        MOV  R3,@SND1AD
        LI   R3,SND1AD
-       LI   R0,>8000
+       LI   R0,TGN1
        BL   @STRTPL
 *
        LI   R3,MWRLD2
        MOV  R3,@SND2AD
        LI   R3,SND2AD
-       LI   R0,>A000
+       LI   R0,TGN2
        BL   @STRTPL
 *
        LI   R3,MWRLD3
        MOV  R3,@SND3AD
        LI   R3,SND3AD
-       LI   R0,>C000
+       LI   R0,TGN3
        BL   @STRTPL
 * Select default envelope
        CLR  @CURENV
@@ -58,15 +62,15 @@ PLYMSC DECT R10
        MOV  R11,*R10
 * Play from Tone Generator 1
        LI   R3,SND1AD
-       LI   R0,>8000
+       LI   R0,TGN1
        BL   @PLYONE
 * Play from Tone Generator 2
        LI   R3,SND2AD
-       LI   R0,>A000
+       LI   R0,TGN2
        BL   @PLYONE
 * Play from Tone Generator 3
        LI   R3,SND3AD
-       LI   R0,>C000
+       LI   R0,TGN3
        BL   @PLYONE
 *
 PLYMRT MOV  *R10+,R11
