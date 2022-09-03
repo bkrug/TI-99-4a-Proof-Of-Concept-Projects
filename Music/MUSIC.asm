@@ -7,8 +7,9 @@
 *
 * Constants
 *
-SGADR  EQU  >8400
        COPY 'CONST.asm'
+       COPY 'CPUADR.asm'
+* Offsets within sound structure
 SNDTIM EQU  2
 SNDVOL EQU  4
 * Codes for different tone generators
@@ -30,6 +31,9 @@ ONE    BYTE >01
 PLYINT
        DECT R10
        MOV  R11,*R10
+* Select default envelope
+       CLR  @CURENV
+       INC  @CURENV
 * Start Music
        LI   R0,TGN1
        LI   R1,MWRLD1
@@ -42,9 +46,6 @@ PLYINT
        LI   R0,TGN3
        LI   R1,MWRLD3
        BL   @STRTPL
-* Select default envelope
-       CLR  @CURENV
-       INC  @CURENV
 *
        MOV  *R10+,R11
        RT

@@ -5,6 +5,8 @@ VSAVER EQU  >83D6        Screen Saver timer address (word)
 *
 USRISR EQU  >83C4        Address defining address of user-defined service routine
 *
+SGADR  EQU  >8400        Address for accessing sound generators
+*
 VDPSTA EQU  >8802        VDP RAM status
 VDPRD  EQU  >8800        VDP RAM read data
 VDPWD  EQU  >8C00        VDP RAM write data
