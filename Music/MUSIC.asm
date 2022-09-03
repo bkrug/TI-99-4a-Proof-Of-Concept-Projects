@@ -18,7 +18,7 @@ TGN3    EQU  >C000
 *
        EVEN
 EIGHT  DATA >08
-FIFTEN BYTE 0
+MINVOL BYTE 0
 NOVOL  BYTE >0F
 SETVOL BYTE >10
 ONE    BYTE >01
@@ -321,7 +321,7 @@ ENV4D  C    @SNDTIM(R3),R6
        SB   @ONE,*R4
        RT
 * No, are we in release mode?
-ENV4E  C    @SNDTIM(R3),@FIFTEN
+ENV4E  C    @SNDTIM(R3),@MINVOL
        JL   ENV4F
 * No, set volume to max
        SB   *R4,*R4
