@@ -154,8 +154,8 @@ ENVELP
 * Call envelope to set the cur volume in *R4
        BL   *R5
 * Set new volume
-       AB   *R4,R0
        AB   @SETVOL,R0
+       AB   *R4,R0
        MOVB R0,@SGADR
 *
        MOV  *R10+,R11
@@ -184,7 +184,7 @@ ENVLST DATA ENV0,ENV1,ENV2,ENV3
        DATA ENV8
 
 *
-* For each envelope routine the following parameters are set
+* For each envelope routine the following parameters are already set
 *
 * R0 = value indicating current sound generator
 * R1 = address of sound structure
