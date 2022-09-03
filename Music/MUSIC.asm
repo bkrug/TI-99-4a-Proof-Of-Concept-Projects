@@ -31,22 +31,16 @@ PLYINT
        DECT R10
        MOV  R11,*R10
 * Start Music
-       LI   R3,MWRLD1
-       MOV  R3,@SND1AD
-       LI   R3,SND1AD
        LI   R0,TGN1
+       LI   R1,MWRLD1
        BL   @STRTPL
 *
-       LI   R3,MWRLD2
-       MOV  R3,@SND2AD
-       LI   R3,SND2AD
        LI   R0,TGN2
+       LI   R1,MWRLD2
        BL   @STRTPL
 *
-       LI   R3,MWRLD3
-       MOV  R3,@SND3AD
-       LI   R3,SND3AD
        LI   R0,TGN3
+       LI   R1,MWRLD3
        BL   @STRTPL
 * Select default envelope
        CLR  @CURENV
@@ -85,14 +79,24 @@ REPTVL DATA REPEAT
 * Initialize stream of music for one tone generator
 *
 * R0 - specifies the sound generator
-* R3 - address of address of the next piece of data for sound generator
+* R1 - address of music for 1 sound generator
 STRTPL
        DECT R10
        MOV  R11,*R10
+* Let R3 = address of Sound structure for current sound generator
+       MOV  R0,R3
+       AI   R3,-TGN1
+       SRL  R3,12
+       AI   R3,SNDSTR
+       MOV  *R3,R3
+* Move specified music to sound structure
+       MOV  R1,*R3
 * Let R1 = address of current note
        MOV  *R3,R1
 *
        JMP  PLY1
+
+SNDSTR DATA SND1AD,SND2AD,SND3AD
 
 *
 * Check if a note has finished. If yes, then play a new one
