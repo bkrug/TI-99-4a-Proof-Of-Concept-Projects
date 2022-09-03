@@ -1,7 +1,7 @@
        DEF  PLYINT,PLYMSC
 *
        REF  SND1AD,SND2AD,SND3AD              Ref from VAR
-       REF  CURENV                            "
+       REF  CURENV,LBR5                       "
        REF  MWRLD1,MWRLD2,MWRLD3              Ref from TUNEWINTER
 
 *
@@ -93,8 +93,8 @@ STRTPL
        MOV  R1,*R3
 * Let R1 = Addres of sound structure
        MOV  R3,R1
-* Let R9 = address of current note
-       MOV  *R3,R9
+* Let R2 = address of current note
+       MOV  *R1,R2
 *
        JMP  PLY1
 
@@ -108,34 +108,34 @@ SNDSTR DATA SND1AD,SND2AD,SND3AD
 PLYONE
        DECT R10
        MOV  R11,*R10
-* Let R9 = address of current note
-       MOV  *R1,R9
-* If R9 = 0, then skip
+* Let R2 = address of current note
+       MOV  *R1,R2
+* If R2 = 0, then skip
        JEQ  STOPMS
 * Look at next data?
        DEC  @SNDTIM(R1)
        JNE  ENVELP
 * Yes
-       AI   R9,4
+       AI   R2,4
 * Reached end of music loop?
-PLY1   C    *R9,@REPTVL
+PLY1   C    *R2,@REPTVL
        JEQ  REPTMS
 * No, reached end of non-repeating music?
-       C    *R9,@STOPVL
+       C    *R2,@STOPVL
        JEQ  STOPMS
 *
 * Play tone.
 *
 * Load tone into sound address. Have to select generator, too.
-TONE   MOVB *R9,R2
-       AB   R0,R2
-       MOVB R2,@SGADR
+TONE   MOVB *R2,R8
+       AB   R0,R8
+       MOVB R8,@SGADR
        NOP
-       MOVB @1(R9),@SGADR
+       MOVB @1(R2),@SGADR
 * Set remaining time
-       MOV  @2(R9),@SNDTIM(R1)
+       MOV  @2(R2),@SNDTIM(R1)
 * Update position within music data
-       MOV  R9,*R1
+       MOV  R2,*R1
 *
 * Select Envelope
 *
@@ -172,8 +172,8 @@ STOPMS CLR  *R1
 *
 * Loop to beginnign of tune for one tone generator
 *
-REPTMS MOV  @2(R9),*R1
-       MOV  *R1,R9
+REPTMS MOV  @2(R2),*R1
+       MOV  *R1,R2
        JMP  PLY1
 
 ENVLST DATA ENV0,ENV1,ENV2,ENV3
@@ -186,7 +186,7 @@ ENVLST DATA ENV0,ENV1,ENV2,ENV3
 *
 ENV0
 * Is this a rest?
-       C    *R9,@RESTVL
+       C    *R2,@RESTVL
        JNE  ENV0A
 * Yes, turn off sound
        MOVB @NOVOL,*R4
@@ -201,7 +201,7 @@ ENV0A  SB   *R4,*R4
 *
 ENV1
 * Is this a rest?
-       C    *R9,@RESTVL
+       C    *R2,@RESTVL
        JEQ  ENV1A
 * No, are we at end of note
        C    @SNDTIM(R1),@NTPAUS
@@ -220,10 +220,10 @@ ENV1B  SB   *R4,*R4
 NTDIM  DATA 16                      point at which to reduce the volume
 ENV2
 * Is this the begining of a note?
-       C    @SNDTIM(R1),@2(R9)
+       C    @SNDTIM(R1),@2(R2)
        JNE  ENV2A
 * Yes, is it a rest?
-       C    *R9,@RESTVL
+       C    *R2,@RESTVL
        JEQ  ENV2Y
 * No, set volume to peek
        SB   *R4,*R4
@@ -248,13 +248,13 @@ ENV2C  RT
 *
 ENV3
 * Is this a rest?
-       C    *R9,@RESTVL
+       C    *R2,@RESTVL
        JNE  ENV3M
 * Yes, turn off volume
        MOVB @NOVOL,*R4
        RT
 * Is this the begining of a note?
-ENV3M  C    @SNDTIM(R1),@2(R9)
+ENV3M  C    @SNDTIM(R1),@2(R2)
        JNE  ENV3B
 * Yes, set volume to either off or half the max time
        MOV  @SNDTIM(R1),R5
@@ -266,11 +266,11 @@ ENV3A  SLA  R5,8
        MOVB R5,*R4
        RT
 * No, Let R6 = time to begin release
-ENV3B  MOV  @2(R9),R6
+ENV3B  MOV  @2(R2),R6
        SRL  R6,1
        CI   R6,>10
        JL   ENV3C
-       MOV  @2(R9),R6
+       MOV  @2(R2),R6
        AI   R6,->10
 * Are we in attack mode?
 ENV3C  C    @SNDTIM(R1),R6
@@ -292,13 +292,13 @@ ENV3RT RT
 *
 ENV4
 * Is this a rest?
-       C    *R9,@RESTVL
+       C    *R2,@RESTVL
        JNE  ENV4A
 * Yes, turn off volume
        MOVB @NOVOL,*R4
        RT
 * Is this the begining of a note?
-ENV4A  C    @SNDTIM(R1),@2(R9)
+ENV4A  C    @SNDTIM(R1),@2(R2)
        JNE  ENV4C
 * Yes, set volume to either off or half the max time
        MOV  @SNDTIM(R1),R5
@@ -310,11 +310,11 @@ ENV4B  SLA  R5,8
        MOVB R5,*R4
        RT
 * No, Let R6 = time to end attack
-ENV4C  MOV  @2(R9),R6
+ENV4C  MOV  @2(R2),R6
        SRL  R6,1
        CI   R6,>10
        JL   ENV4D
-       MOV  @2(R9),R6
+       MOV  @2(R2),R6
        AI   R6,->10
 * Are we in attack mode?
 ENV4D  C    @SNDTIM(R1),R6
@@ -338,13 +338,13 @@ ENV4F  AB   @ONE,*R4
 *
 ENV5
 * Is this a rest?
-       C    *R9,@RESTVL
+       C    *R2,@RESTVL
        JNE  ENV5A
 * Yes, turn off volume
        MOVB @NOVOL,*R4
        RT
 * Is this the begining of a note?
-ENV5A  C    @SNDTIM(R1),@2(R9)
+ENV5A  C    @SNDTIM(R1),@2(R2)
        JNE  ENV5C
 * Yes, set volume to either off or half the max time
        MOV  @SNDTIM(R1),R5
@@ -356,11 +356,11 @@ ENV5B  SLA  R5,8
        MOVB R5,*R4
        RT
 * No, Let R6 = time to end attack
-ENV5C  MOV  @2(R9),R6
+ENV5C  MOV  @2(R2),R6
        SRL  R6,1
        CI   R6,>10
        JL   ENV5D
-       MOV  @2(R9),R6
+       MOV  @2(R2),R6
        AI   R6,->10
 * Are we in attack mode?
 ENV5D  C    @SNDTIM(R1),R6
@@ -388,7 +388,7 @@ ENV5F  AB   @ONE,*R4
 *
 ENV6
 * Is this a rest?
-       C    *R9,@RESTVL
+       C    *R2,@RESTVL
        JEQ  ENV6A
 * No, are we at end of note
        C    @SNDTIM(R1),@NTPAUS
@@ -409,7 +409,7 @@ ENV6B  MOV  @SNDTIM(R1),R5
 *
 ENV7
 * Is this a rest?
-       C    *R9,@RESTVL
+       C    *R2,@RESTVL
        JEQ  ENV7A
 * No, are we at end of note
        C    @SNDTIM(R1),@NTPAUS
@@ -432,7 +432,7 @@ ENV7B  MOV  @SNDTIM(R1),R5
 *
 ENV8
 * Is this a rest?
-       C    *R9,@RESTVL
+       C    *R2,@RESTVL
        JEQ  ENV8A
 * No, are we at end of note
        C    @SNDTIM(R1),@NTPAUS
@@ -443,7 +443,7 @@ ENV8A  MOVB @NOVOL,*R4
 * No, set volume acording to remaining time
 ENV8B  MOV  @SNDTIM(R1),R5
        ANDI R5,8
-       SRL  R5,1
-       SLA  R5,8
-       MOVB R5,*R4
+* R5 now contains either 0 or 8.
+* (top of mid-level volume)
+       MOVB @LBR5,*R4
        RT
