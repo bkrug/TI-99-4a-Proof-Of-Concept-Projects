@@ -20,6 +20,7 @@ COL7   EQU  >0F00
 FCTN   EQU  4
 SHFT   EQU  5
 CTRL   EQU  6
+ENTER  EQU  13
 
 *
 *  Column 0-5
@@ -38,14 +39,17 @@ CTRL   EQU  6
 ASCII
 * Row 0 on left, Row 7 on right
 * Column 0
-       TEXT '='
-       BYTE 32,13,0,FCTN,SHFT,CTRL,0
+       TEXT '= '
+       BYTE ENTER,0,FCTN,SHFT,CTRL,0
 * Columns 1-5
        TEXT '.LO92SWX'
        TEXT ',KI83DEC'
        TEXT 'MJU74FRV'
        TEXT 'NHY65GTB'
        TEXT '/;P01AQZ'
+* Value when no key has been pressed in a column
+NOKEY  BYTE >FF
+       EVEN
 * Amount of time to wait between key repeats
 WAIT   DATA 30
 
@@ -64,24 +68,30 @@ KSCAN1 LI   R12,>0024
        LDCR R2,4
 * Put scaned keyboard rows in R3 (high byte)
        LI   R12,>0006
-       CLR  R3
        STCR R3,8
-* Was any scan row in the column selected?
-KSCAN2 CI   R3,>FF00
-       JEQ  KSCAN7
-* Yes, Let R4 = scanned row
-       CLR  R4
-       SRL  R3,8
-KSCAN3 SRL  R3,1
-       JNC  KEYDWN
-       INC  R4
-       JMP  KSCAN3
-* No key pressed in this column
-KSCAN7 AI   R2,>100
+* Was any key in this column pressed?
+KSCAN2 CB   R3,@NOKEY
+       JNE  KSCAN3
+* No, check next column
+       AI   R2,>100
        CI   R2,COL5
        JLE  KSCAN1
-* No Key pressed in any column
-       JMP  KEYRT       
+* No key in any column was pressed
+       JMP  KEYRT
+
+*
+* Some key in this column was pressed
+*
+KSCAN3
+* Let R4 = scanned row
+       CLR  R4
+* Move scan results contents to lower byte
+       SRL  R3,8
+* Find first bit that contains 0 (pressed key).
+KSCAN4 SRL  R3,1
+       JNC  KEYDWN
+       INC  R4
+       JMP  KSCAN4      
 
 *
 * Key is down
