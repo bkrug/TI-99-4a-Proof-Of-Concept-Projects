@@ -5,8 +5,6 @@
        DEF  KEYTIM,CURKEY,PRVKEY
        DEF  CURENV,TONSEL
 *
-       DEF  PRVTCK,NXTTCK
-*
        DEF  LBR0,LBR1,LBR2,LBR3,LBR4
        DEF  LBR5,LBR6,LBR7,LBR8,LBR9
        DEF  LBR13,LBR14,LBR15
@@ -27,23 +25,18 @@ STACK
 *
 * MUSIC Variables
 *
-SND1AD BSS  2             Address of next note in sound generator 1
+SND1AD BSS  2             Address of current note in sound generator 1
        BSS  2             Remaining time for current note
        BSS  1             Current Volume
        BSS  1             (unused)
-SND2AD BSS  2             Address of next note in sound generator 2
+SND2AD BSS  2             Address of current note in sound generator 2
        BSS  2             Remaining time for current note
        BSS  1             Current Volume
        BSS  1             (unused)
-SND3AD BSS  2             Address of next note for sound generator 3
+SND3AD BSS  2             Address of current note for sound generator 3
        BSS  2             Remaining time for current note
        BSS  1             Current Volume
        BSS  1             (unused)
-*
-* Timer variables
-*
-PRVTCK BSS  2
-NXTTCK BSS  2
 *
 * KSCAN Variable
 *
