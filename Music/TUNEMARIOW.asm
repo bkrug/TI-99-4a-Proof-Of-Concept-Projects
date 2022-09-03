@@ -9,7 +9,7 @@
 MWRLD1
 * 4/4
        DATA D3,N4
-       DATA Bb2,N8+N16
+       DATA Bb2,N8DOT
        DATA F2,N16
        DATA E2,N8
        DATA F2,N16
@@ -36,14 +36,14 @@ MW1
        DATA A2,N8TRP
        DATA A2,N16TRP
        DATA Bb2,N8
-       DATA Bb2,N4+N8
+       DATA Bb2,N4DOT
 * Measure 4
        DATA A2,N4
-       DATA F2,N8+N16
+       DATA F2,N8DOT
        DATA C2,N16
        DATA D2,N16
        DATA F2,N8
-       DATA F2,N8+N16
+       DATA F2,N8DOT
        DATA REST,N16
        DATA D2,N16
 *
@@ -51,17 +51,17 @@ MW1
        DATA F2,N8
        DATA F2,N8
        DATA C3,N8
-       DATA A2,N8+N16
+       DATA A2,N8DOT
        DATA G2,N16
        DATA G2,N4
 *
        DATA A2,N4
-       DATA F2,N8+N16
+       DATA F2,N8DOT
        DATA C2,N16
 
        DATA D2,N16
        DATA F2,N8
-       DATA F2,N8+N16
+       DATA F2,N8DOT
        DATA REST,N16
        DATA D2,N16
 *
@@ -74,11 +74,11 @@ MW1
        DATA F2,N2
 * Measure 8
        DATA A2,N4
-       DATA F2,N8+N16
+       DATA F2,N8DOT
        DATA C2,N16
        DATA D2,N16
        DATA F2,N8
-       DATA F2,N8+N16
+       DATA F2,N8DOT
        DATA REST,N16
        DATA D2,N16
 *
@@ -86,16 +86,16 @@ MW1
        DATA F2,N8
        DATA F2,N8
        DATA C3,N8
-       DATA A2,N8+N16
+       DATA A2,N8DOT
        DATA G2,N16
        DATA G2,N4
 *
        DATA A2,N4
-       DATA F2,N8+N16
+       DATA F2,N8DOT
        DATA C2,N16
        DATA D2,N16
        DATA F2,N8
-       DATA F2,N8+N16
+       DATA F2,N8DOT
        DATA REST,N16
        DATA D2,N16
 *
@@ -107,45 +107,45 @@ MW1
        DATA F2,N16
        DATA F2,N2
 * Measure 12
-       DATA A2,N8+N16
-       DATA F2,N8+N16
+       DATA A2,N8DOT
+       DATA F2,N8DOT
        DATA C2,N8
-       DATA A2,N8+N16
+       DATA A2,N8DOT
        DATA F2,N16
        DATA F2,N4
 *
        DATA Ab2,N16
        DATA F2,N16
        DATA C2,N8
-       DATA Ab2,N8+N16
+       DATA Ab2,N8DOT
        DATA G2,N16
        DATA G2,N2
 *
-       DATA A2,N8+N16
-       DATA F2,N8+N16
+       DATA A2,N8DOT
+       DATA F2,N8DOT
        DATA C2,N8
-       DATA A2,N8+N16
+       DATA A2,N8DOT
        DATA F2,N16
        DATA F2,N4
 *
        DATA Ab2,N16
        DATA F2,N16
        DATA C2,N8
-       DATA C3,N2+N4
+       DATA C3,N2DOT
 * Measure 16
        DATA A2,N4
-       DATA F2,N8+N16
+       DATA F2,N8DOT
        DATA C2,N16
        DATA D2,N16
        DATA F2,N8
-       DATA F2,N8+N16
+       DATA F2,N8DOT
        DATA REST,N16
        DATA G2,N16
 *
        DATA A2,N16
        DATA F2,N16
        DATA C2,N8
-       DATA D2,N8+N16
+       DATA D2,N8DOT
        DATA F2,N2
        DATA D2,N16
 *
@@ -162,7 +162,7 @@ MW1
 * Measure 20
        DATA F2,N16
        DATA D2,N8
-       DATA F2,N8+N16
+       DATA F2,N8DOT
        DATA G2,N8
        DATA A2,N16
        DATA Gs2,N16
@@ -172,13 +172,13 @@ MW1
 *
        DATA F2,N16
        DATA D2,N8
-       DATA F2,N8+N16
+       DATA F2,N8DOT
        DATA G2,N8
        DATA A2,N2
 *
        DATA F2,N16
        DATA D2,N8
-       DATA F2,N8+N16
+       DATA F2,N8DOT
        DATA G2,N8
        DATA A2,N16
        DATA Bb2,N16
@@ -188,7 +188,7 @@ MW1
 *
        DATA F2,N16
        DATA D2,N8
-       DATA F2,N8+N16
+       DATA F2,N8DOT
        DATA G2,N8
        DATA F2,N2
 *
@@ -219,7 +219,7 @@ MW2
        DATA F2,N8TRP
        DATA F2,N16TRP
        DATA G2,N8
-       DATA Gb2,N4+N8
+       DATA Gb2,N4DOT
 * Measure 4
        DATA REST,NDBL+NDBL
 * Measure 8
@@ -231,7 +231,7 @@ MW2
 * Measure 20
        DATA D2,N16
        DATA Bb1,N8
-       DATA D2,N8+N16
+       DATA D2,N8DOT
        DATA E2,N8
        DATA F2,N16
        DATA E2,N16
@@ -241,13 +241,13 @@ MW2
 *
        DATA D2,N16
        DATA Bb1,N8
-       DATA D2,N8+N16
+       DATA D2,N8DOT
        DATA E2,N8
        DATA F2,N2
 *
        DATA D2,N16
        DATA Bb1,N8
-       DATA D2,N8+N16
+       DATA D2,N8DOT
        DATA E2,N8
        DATA F2,N16
        DATA G2,N16
@@ -257,7 +257,7 @@ MW2
 *
        DATA D2,N16
        DATA Bb1,N8
-       DATA D2,N8+N16
+       DATA D2,N8DOT
        DATA E2,N8
        DATA C2,N2
 *
@@ -276,7 +276,7 @@ MW3
        DATA F1,N4
        DATA D1,N4
        DATA G1,N8
-       DATA C1,N4+N8
+       DATA C1,N4DOT
 * Measure 4
        DATA F1,N4
        DATA A1,N4
@@ -376,7 +376,7 @@ MW3
        DATA Cs1,N4
 *
        DATA F1,N4
-       DATA REST,N4+N2
+       DATA REST,N2DOT
 *
        DATA F2,N4
        DATA C2,N4
