@@ -16,6 +16,7 @@ SNDVOL EQU  4
 EIGHT  DATA >08
 FIFTEN BYTE 0
 NOVOL  BYTE >0F
+SETVOL BYTE >10
 ONE    BYTE >01
        EVEN
 
@@ -29,19 +30,19 @@ PLYINT
        LI   R3,MWRLD1
        MOV  R3,@SND1AD
        LI   R3,SND1AD
-       LI   R8,>9000       
+       LI   R0,>8000
        BL   @STRTPL
 *
        LI   R3,MWRLD2
        MOV  R3,@SND2AD
        LI   R3,SND2AD
-       LI   R8,>B000     
+       LI   R0,>A000
        BL   @STRTPL
 *
        LI   R3,MWRLD3
        MOV  R3,@SND3AD
        LI   R3,SND3AD
-       LI   R8,>D000      
+       LI   R0,>C000
        BL   @STRTPL
 * Select default envelope
        CLR  @CURENV
@@ -57,15 +58,15 @@ PLYMSC DECT R10
        MOV  R11,*R10
 * Play from Tone Generator 1
        LI   R3,SND1AD
-       LI   R8,>9000
+       LI   R0,>8000
        BL   @PLYONE
 * Play from Tone Generator 2
        LI   R3,SND2AD
-       LI   R8,>B000
+       LI   R0,>A000
        BL   @PLYONE
 * Play from Tone Generator 3
        LI   R3,SND3AD
-       LI   R8,>D000
+       LI   R0,>C000
        BL   @PLYONE
 *
 PLYMRT MOV  *R10+,R11
@@ -79,8 +80,8 @@ REPTVL DATA REPEAT
 *
 * Initialize stream of music for one tone generator
 *
+* R0 - specifies the sound generator
 * R3 - address of address of the next piece of data for sound generator
-* R8 - used to change the generator's volume
 STRTPL
        DECT R10
        MOV  R11,*R10
@@ -92,8 +93,8 @@ STRTPL
 *
 * Check if a note has finished. If yes, then play a new one
 *
+* R0 - specifies the sound generator
 * R3 - address of address of the next piece of data for sound generator
-* R8 - used to change the generator's volume
 PLYONE
        DECT R10
        MOV  R11,*R10
@@ -117,8 +118,7 @@ PLY1   C    *R1,@REPTVL
 *
 * Load tone into sound address. Have to select generator, too.
 TONE   MOVB *R1,R2
-       AB   R8,R2
-       AI   R2,->1000
+       AB   R0,R2
        MOVB R2,@SGADR
        NOP
        MOVB @1(R1),@SGADR
@@ -141,8 +141,9 @@ ENVELP
 * Call envelope to set the cur volume in *R4
        BL   *R5
 * Set new volume
-       AB   *R4,R8
-       MOVB R8,@SGADR
+       AB   *R4,R0
+       AB   @SETVOL,R0
+       MOVB R0,@SGADR
 *
        MOV  *R10+,R11
        RT
@@ -152,8 +153,10 @@ ENVELP
 * Then turn-off sound generator
 *
 STOPMS CLR  *R3
-PAUS   AI   R8,>F00
-       MOVB R8,@SGADR
+       AI   R0,>1F00
+       MOVB R0,@SGADR
+*
+       MOV  *R10+,R11
        RT
 
 *
