@@ -83,18 +83,18 @@ REPTVL DATA REPEAT
 STRTPL
        DECT R10
        MOV  R11,*R10
-* Let R3 = address of Sound structure for current sound generator
-       MOV  R0,R3
-       AI   R3,-TGN1
-       SRL  R3,12
-       AI   R3,SNDSTR
-       MOV  *R3,R3
+* Let R5 = address of Sound structure for current sound generator
+       MOV  R0,R5
+       AI   R5,-TGN1
+       SRL  R5,12
+       AI   R5,SNDSTR
+       MOV  *R5,R5
 * Move specified music to sound structure
-       MOV  R1,*R3
+       MOV  R1,*R5
 * Let R1 = Addres of sound structure
-       MOV  R3,R1
 * Let R2 = address of current note
-       MOV  *R1,R2
+       MOV  R5,R1
+       MOV  *R5,R2
 *
        JMP  PLY1
 
