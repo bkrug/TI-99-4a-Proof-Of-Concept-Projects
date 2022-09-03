@@ -16,14 +16,14 @@
 * it is important to include '-a ">6000"' in the xas99.py
 * command when linking files into a cartridge.
        BYTE  >AA,1,1,0,0,0
-       DATA  PROG
+       DATA  PROG1
        BYTE  0,0,0,0,0,0,0,0      
 *
-PROG   DATA  0
+PROG1  DATA  0
        DATA  BEGIN
-       BYTE  LVL3B-LVL3A
-LVL3A  TEXT  'MUSIC TESTS'
-LVL3B
+       BYTE  P1MSGE-P1MSG
+P1MSG  TEXT  'ENVELOPE DEMO'
+P1MSGE
        EVEN
        
 *
@@ -40,7 +40,7 @@ BEGIN
 *
 * Variable initialization routines
 *
-       BL   @GROMCR
+       BL   @GROMCR              Copy pattern definitions from GROM to VRAM
        BL   @DSPINT              Write instructions to screen
        BL   @PLYINT              Music variables
 *
@@ -63,9 +63,9 @@ GAMELP
        BL   @KSCAN
 * Process scanned key
        BL   @PRCKEY
-* Display Current Envelope
+* Display current envelope
        BL   @DSPENV
-* Maybe change current note
+* Adjust tone and envelope
        BL   @PLYMSC
 * Repeat
        JMP  WAIT
