@@ -6,6 +6,7 @@
        REF  KSCAN                           Ref from KSCAN
        REF  PRCKEY                          Ref from SELECT
        REF  DSPINT,DSPENV                   Ref from DISPLAY
+       REF  GROMCR                          Ref from GROM
 
 ********@*****@*********************@**************************
 *--------------------------------------------------------------
@@ -39,6 +40,7 @@ BEGIN
 *
 * Variable initialization routines
 *
+       BL   @GROMCR
        BL   @DSPINT              Write instructions to screen
        BL   @PLYINT              Music variables
 *

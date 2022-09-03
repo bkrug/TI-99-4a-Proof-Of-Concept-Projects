@@ -9,3 +9,6 @@ VDPSTA EQU  >8802        VDP RAM status
 VDPRD  EQU  >8800        VDP RAM read data
 VDPWD  EQU  >8C00        VDP RAM write data
 VDPWA  EQU  >8C02        VDP RAM write address
+*
+GRMWA  EQU  >9C02
+GRMRD  EQU  >9800
