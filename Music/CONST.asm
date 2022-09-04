@@ -1,20 +1,9 @@
 *
 * Sound related
 *
-REST   EQU  >0002       Turn off sound generator for specified duration
+REST   EQU  >7F         Turn off sound generator for specified duration
 STOP   EQU  >CFFF       Stop playing a signal/tune at end
 REPEAT EQU  >CFFE       Play signal/tune as repeated loop
-*
-* Button flags
-*
-FLG0   EQU  >8000
-FLG1   EQU  >4000
-FLG2   EQU  >2000
-FLG3   EQU  >1000
-FLGA   EQU  >0800
-FLGB   EQU  >0400
-FLGC   EQU  >0200
-FLGD   EQU  >0100
 *
 * Other
 *

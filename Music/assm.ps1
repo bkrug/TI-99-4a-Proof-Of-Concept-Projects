@@ -11,7 +11,7 @@ if ($mode -ne 'release') {
     $mode = 'debug'
 }
 
-$fileList = 'VAR', 'MAIN', 'KSCAN', 'SELECT', 'MUSIC', 'TUNEMARIOW', 'VDP', 'DISPLAY', 'GROM'
+$fileList = 'VAR', 'MAIN', 'KSCAN', 'SELECT', 'MUSIC', 'TUNEMARIOW', 'VDP', 'DISPLAY', 'GROM', 'TONETABLE'
 
 #Deleting old work files
 write-host 'Deleting old work files'
@@ -45,6 +45,7 @@ xas99.py -b -a ">6000" -o musiceffectsC.bin -l `
     MAIN.obj `
     VAR.obj `
     MUSIC.obj `
+    TONETABLE.obj `
     TUNEMARIOW.obj `
     KSCAN.obj `
     SELECT.obj `
