@@ -413,7 +413,7 @@ ENV5F  AB   @ONE,*R4
 
 *
 * Envelope 6
-* Attacks 8 times, then returns to mid-level
+* Attacks for awhile, instantly return to mid-level, repeat
 *
 ENV6
 * Is this a rest?
@@ -434,7 +434,7 @@ ENV6B  MOV  *R3,R5
 
 *
 * Envelope 7
-* Goes up and down by 8 positions
+* Goes up and down by 8 position repeatedly
 *
 ENV7
 * Is this a rest?
@@ -457,7 +457,7 @@ ENV7B  MOV  *R3,R5
 
 *
 * Envelope 8
-* Flat high, Flat low
+* High volume, mid-level volume, repeat
 *
 ENV8
 * Is this a rest?
