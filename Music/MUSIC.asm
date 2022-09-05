@@ -8,11 +8,12 @@
 *
 * Constants
 *
-       COPY 'CONST.asm'
+       COPY 'NOTEVAL.asm'
        COPY 'CPUADR.asm'
 * Offsets within sound structure
-SNDTIM EQU  2
-SNDVOL EQU  4
+SNDORG EQU  2
+SNDTIM EQU  4
+SNDVOL EQU  6
 * Codes for different tone generators
 TGN1    EQU  >8000
 TGN2    EQU  >A000
@@ -140,9 +141,11 @@ PLY1   C    *R2,@REPTVL
        MOVB R8,@SGADR
        SWPB R8
        MOVB R8,@SGADR
-* Set remaining time
+* Set original time
        MOVB @1(R2),R8
        SRL  R8,8
+       MOV  R8,@SNDORG(R1)
+* Set remaining time
        MOV  R8,@SNDTIM(R1)
 * Update position within music data
        MOV  R2,*R1
