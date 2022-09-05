@@ -1,4 +1,11 @@
 *
+* Sound related
+*
+REST   EQU  >7F         Turn off sound generator for specified duration
+STOP   EQU  >CFFF       Stop playing a signal/tune at end
+REPEAT EQU  >CFFE       Play signal/tune as repeated loop
+
+*
 * Durantion values
 *
 * The smallest not should be set to a multiple of 3.
