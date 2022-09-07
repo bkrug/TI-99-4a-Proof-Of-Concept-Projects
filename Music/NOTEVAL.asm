@@ -1,7 +1,6 @@
 *
 * Sound related
 *
-REST   EQU  >7F         Turn off sound generator for specified duration
 STOP   EQU  >CFFF       Stop playing a signal/tune at end
 REPEAT EQU  >CFFE       Play signal/tune as repeated loop
 
@@ -131,3 +130,4 @@ Ds6    EQU  >42
 Eb6    EQU  >42
 E6     EQU  >43
 F6     EQU  >44
+REST   EQU  >7F
