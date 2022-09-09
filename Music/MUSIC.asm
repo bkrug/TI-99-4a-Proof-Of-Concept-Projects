@@ -11,17 +11,26 @@
        COPY 'NOTEVAL.asm'
        COPY 'CPUADR.asm'
 * Offsets within sound structure
-SNDORG EQU  2
-SNDTIM EQU  4
-SNDVOL EQU  6
+SNDORG  EQU  2
+SNDTIM  EQU  4
+SNDVOL  EQU  6
+SNDMOD  EQU  7
+SNDALW  EQU  8
+* Allowed ADSR Modes
+HSATCK  EQU  1
+HSDECY  EQU  2
+HSSSTN  EQU  4
+HSRELS  EQU  8
+* Current ADSR Modes
+MDATCK  EQU  0
+MDDECY  EQU  1
+MDSSTN  EQU  2
+MDRELS  EQU  3
 * Codes for different tone generators
 TGN1    EQU  >8000
 TGN2    EQU  >A000
 TGN3    EQU  >C000
 *
-       EVEN
-EIGHT  DATA >08
-MINVOL BYTE 0
 NOVOL  BYTE >0F
 SETVOL BYTE >10
 ONE    BYTE >01
@@ -243,174 +252,103 @@ ENV1B  SB   *R4,*R4
 * Envelope 2
 * Sustain, Release
 *
-EN2DIM  DATA 16                      point at which to reduce the volume
-ENV2
-* Is this the begining of a note?
-       CB   @1(R3),@1(R2)
-       JNE  ENV2A
-* Yes, is it a rest?
-       CB   *R2,@RESTVL
-       JEQ  ENV2Y
-* No, set volume to peek
-       SB   *R4,*R4
-       RT
-* Are we at end of note?
-ENV2A  C    *R3,@NTPAUS
-       JH   ENV2B
-* Yes, turn off sound
-ENV2Y  MOVB @NOVOL,*R4
-       RT
-* No, are we at point to dim volume?
-ENV2B  C    *R3,@EN2DIM
-       JHE  ENV2C
-* Yes, decrease volume
-       AB   @ONE,*R4
-* Set the volume
-ENV2C  RT
+ENV2   LI   R5,RATES1
+       JMP  ADSR
 
 *
 * Envelope 3
 * Attack, Release
 *
-ENV3
-* Is this a rest?
-       CB   *R2,@RESTVL
-       JNE  ENV3M
-* Yes, turn off volume
-       MOVB @NOVOL,*R4
-       RT
-* Is this the begining of a note?
-ENV3M  C    @1(R3),@1(R2)
-       JNE  ENV3B
-* Yes, set volume to either off or half the max time
-       MOV  *R3,R5
-       SRL  R5,1
-       CI   R5,>F
-       JLE  ENV3A
-       LI   R5,>F
-ENV3A  SLA  R5,8
-       MOVB R5,*R4
-       RT
-* No, Let R6 = time to begin release
-ENV3B  MOVB @1(R2),R6
-       SRL  R6,8+1
-       CI   R6,>10
-       JL   ENV3C
-       MOVB @1(R2),R6
-       SRL  R6,8
-       AI   R6,->10
-* Are we in attack mode?
-ENV3C  C    *R3,R6
-       JLE  ENV3D
-* Yes, increase volume
-       SB   @ONE,*R4
-       RT
-* No, is volume already off?
-ENV3D  CB   *R4,@NOVOL
-       JEQ  ENV3RT
-* No, release
-       AB   @ONE,*R4
-*
-ENV3RT RT
+ENV3   LI   R5,RATES2
+       JMP  ADSR
 
 *
 * Envelope 4
 * Attack, Sustain, Release
 *
-ENV4
-* Is this a rest?
-       CB   *R2,@RESTVL
-       JNE  ENV4A
-* Yes, turn off volume
-       MOVB @NOVOL,*R4
-       RT
-* Is this the begining of a note?
-ENV4A  CB   @1(R3),@1(R2)
-       JNE  ENV4C
-* Yes, set volume to either off or half the max time
-       MOV  *R3,R5
-       SRL  R5,1
-       CI   R5,>F
-       JLE  ENV4B
-       LI   R5,>F
-ENV4B  SLA  R5,8
-       MOVB R5,*R4
-       RT
-* No, Let R6 = time to end attack
-ENV4C  MOVB @1(R2),R6
-       SRL  R6,8+1
-       CI   R6,>10
-       JL   ENV4D
-       MOVB @1(R2),R6
-       SRL  R6,8
-       AI   R6,->10
-* Are we in attack mode?
-ENV4D  C    *R3,R6
-       JLE  ENV4E
-* Yes, increase volume
-       SB   @ONE,*R4
-       RT
-* No, are we in release mode?
-ENV4E  C    *R3,@MINVOL
-       JL   ENV4F
-* No, set volume to max
-       SB   *R4,*R4
-       RT
-* Yes, decrease volume
-ENV4F  AB   @ONE,*R4
-       RT
+ENV4   LI   R5,RATES3
+       JMP  ADSR
 
 *
 * Envelope 5
 * Attack, Decay, Sustain, Release
 *
-ENV5
+ENV5   LI   R5,RATES4
+       JMP  ADSR
+
+*
+* Attack, Decay, Sustain, Release
+*
+ADSR
 * Is this a rest?
        CB   *R2,@RESTVL
-       JNE  ENV5A
+       JNE  ADSR1
 * Yes, turn off volume
        MOVB @NOVOL,*R4
        RT
 * Is this the begining of a note?
-ENV5A  CB   @1(R3),@1(R2)
-       JNE  ENV5C
-* Yes, set volume to either off or half the max time
-       MOV  *R3,R5
-       SRL  R5,1
-       CI   R5,>F
-       JLE  ENV5B
-       LI   R5,>F
-ENV5B  SLA  R5,8
-       MOVB R5,*R4
-       RT
-* No, Let R6 = time to end attack
-ENV5C  MOVB @1(R2),R6
-       SRL  R6,8+1
-       CI   R6,>10
-       JL   ENV5D
-       MOVB @1(R2),R6
+ADSR1  CB   @1(R3),@1(R2)
+       JNE  ADSR2
+* Yes, set mode to attack
+       LI   R6,MDATCK*>100
+       MOVB R6,@SNDMOD(R1)
+* Start volume at silent
+       MOVB @NOVOL,*R4
+ADSR2
+* Go to mode method.
+       MOVB @SNDMOD(R1),R6
        SRL  R6,8
-       AI   R6,->10
-* Are we in attack mode?
-ENV5D  C    *R3,R6
-       JLE  ENV5E
-* Yes, increase volume
-       SB   @ONE,*R4
-       RT
-* No, are we in decay mode?
-ENV5E  AI   R6,->8
-       C    *R3,R6
-       JH   ENV5F
-* No, are we in release mode?
-       C    *R3,@EIGHT
-       JL   ENV5F
-* No, set volume to max
-       SB   *R4,*R4
-       RT
-* Yes, decrease volume
-ENV5F  AB   @ONE,*R4
-       RT
+       SLA  R6,1
+       AI   R6,DOSTAG
+       MOV  *R6,R6
+       B    *R6
 
+DOSTAG DATA DOATCK,DODECY,DOSSTN,DORELS
+
+* R5 contains address of current rate
+DOATCK SB   *R5,*R4
+       JGT  DOA1
+       SB   *R4,*R4
+       AB   @ONE,@SNDMOD(R1)
+DOA1   RT
+
+* R5 contains address of current rate
+DODECY AB   @1(R5),*R4
+       CB   *R4,@2(R5)
+       JLT  DOD1
+       MOVB @2(R5),*R4
+       AB   @ONE,@SNDMOD(R1)
+DOD1   RT
+
+* R5 contains address of current rate
+DOSSTN MOVB @2(R5),*R4
+* the above line of code is for just incase someone
+* switched envelopes mid-note
+       MOVB @3(R5),R6
+       SRL  R6,8
+       C    *R3,R6
+       JH   DOS1
+       AB   @ONE,@SNDMOD(R1)
+DOS1   RT
+
+* R5 contains address of current rate
+DORELS AB   @4(R5),*R4
+       CB   *R4,@NOVOL
+       JLE  DOR1
+       MOVB @NOVOL,*R4
+DOR1   RT
+
+D      EQU  15      * Mode Disabled
+* byte 0 = attack rate
+* byte 1 = decay rate
+* byte 2 = sustain level
+* byte 3 = start release when this much time remains
+* byte 4 = release rate
+RATES1 BYTE D,D,0,16,1
+RATES2 BYTE 4,1,D,16,D
+RATES3 BYTE 4,D,0,16,1
+RATES4 BYTE 4,1,8,8,1
+  
 *
 * Envelope 6
 * Attacks for awhile, instantly return to mid-level, repeat
