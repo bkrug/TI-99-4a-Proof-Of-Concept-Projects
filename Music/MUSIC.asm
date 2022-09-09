@@ -11,7 +11,7 @@
        COPY 'NOTEVAL.asm'
        COPY 'CPUADR.asm'
 * Offsets within sound structure
-SNDORG  EQU  2
+SNDELP  EQU  2
 SNDTIM  EQU  4
 SNDVOL  EQU  6
 SNDMOD  EQU  7
@@ -119,7 +119,8 @@ PLYONE
        MOV  *R1,R2
 * If R2 = 0, then skip
        JEQ  STOPMS
-* Look at next data?
+* Look at next note?
+       INC  @SNDELP(R1)
        DEC  @SNDTIM(R1)
        JNE  ENVELP
 * Yes
@@ -144,11 +145,11 @@ PLY1   C    *R2,@REPTVL
        MOVB R8,@SGADR
        SWPB R8
        MOVB R8,@SGADR
-* Set original time
+* Set elapsed time
+       CLR  @SNDELP(R1)
+* Set remaining time
        MOVB @1(R2),R8
        SRL  R8,8
-       MOV  R8,@SNDORG(R1)
-* Set remaining time
        MOV  R8,@SNDTIM(R1)
 * Update position within music data
        MOV  R2,*R1
@@ -281,7 +282,7 @@ ADSR
        MOVB @NOVOL,*R4
        RT
 * Is this the begining of a note?
-ADSR1  CB   @1(R3),@1(R2)
+ADSR1  MOV  @SNDELP(R1),R7
        JNE  ADSR2
 * Yes, set mode to attack
        LI   R6,MDATCK*>100
