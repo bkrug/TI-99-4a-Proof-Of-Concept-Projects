@@ -2,7 +2,7 @@
 *
        REF  SND1AD,SND2AD,SND3AD              Ref from VAR
        REF  CURENV,LBR5                       "
-       REF  MWRLD1,MWRLD2,MWRLD3              Ref from TUNEWINTER
+       REF  MWRLD                             Ref from TUNEWINTER
        REF  TTBL                              Ref from TONETABLE
 
 *
@@ -40,16 +40,18 @@ PLYINT
        CLR  @CURENV
        INC  @CURENV
 * Start Music
+       LI   R2,MWRLD
+*
        LI   R0,TGN1
-       LI   R1,MWRLD1
+       MOV  *R2+,R1
        BL   @STRTPL
 *
        LI   R0,TGN2
-       LI   R1,MWRLD2
+       MOV  *R2+,R1
        BL   @STRTPL
 *
        LI   R0,TGN3
-       LI   R1,MWRLD3
+       MOV  *R2+,R1
        BL   @STRTPL
 *
        MOV  *R10+,R11
@@ -90,6 +92,8 @@ RESTVL BYTE REST                    if this is in place of a tone, then do a res
 STRTPL
        DECT R10
        MOV  R11,*R10
+       DECT R10
+       MOV  R2,*R10
 * Let R5 = address of Sound structure for current sound generator
        MOV  R0,R5
        AI   R5,-TGN1
@@ -115,6 +119,8 @@ SNDSTR DATA SND1AD,SND2AD,SND3AD
 PLYONE
        DECT R10
        MOV  R11,*R10
+       DECT R10
+       MOV  R2,*R10
 * Let R2 = address of current note
        MOV  *R1,R2
 * If R2 = 0, then skip
@@ -175,6 +181,7 @@ ENVELP
        AB   *R4,R0
        MOVB R0,@SGADR
 *
+PLY1RT MOV  *R10+,R2
        MOV  *R10+,R11
        RT
 
@@ -186,8 +193,7 @@ STOPMS CLR  *R1
        AI   R0,>1F00
        MOVB R0,@SGADR
 *
-       MOV  *R10+,R11
-       RT
+       JMP  PLY1RT
 
 *
 * Loop to beginnign of tune for one tone generator
