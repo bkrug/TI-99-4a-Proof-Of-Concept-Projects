@@ -1,7 +1,7 @@
        DEF  PLYINT,PLYMSC
 *
        REF  SND1AD,SND2AD,SND3AD              Ref from VAR
-       REF  CURENV,LBR5                       "
+       REF  SONGHD,NOTERT,CURENV,LBR5         "
        REF  MWRLD                             Ref from TUNEWINTER
        REF  TTBL                              Ref from TONETABLE
 
@@ -39,9 +39,10 @@ PLYINT
 * Select default envelope
        CLR  @CURENV
        INC  @CURENV
-* Start Music
+* Select default song
        LI   R2,MWRLD
-*
+       MOV  R2,@SONGHD
+* Start Music
        LI   R0,TGN1
        MOV  *R2+,R1
        BL   @STRTPL
@@ -53,6 +54,8 @@ PLYINT
        LI   R0,TGN3
        MOV  *R2+,R1
        BL   @STRTPL
+* Default note-duration ratio to 60hz
+       MOV  *R2,@NOTERT
 *
        MOV  *R10+,R11
        RT

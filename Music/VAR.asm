@@ -1,12 +1,13 @@
        DEF  STACK,WS
 *
        DEF  SND1AD,SND2AD,SND3AD
+       DEF  SONGHD,NOTERT,CURENV,TONSEL
 *
        DEF  KEYTIM,CURKEY,PRVKEY
-       DEF  CURENV,TONSEL
 *
        DEF  LBR0,LBR1,LBR2,LBR3,LBR4
        DEF  LBR5,LBR6,LBR7,LBR8,LBR9
+       DEF  LBR10,LBR11,LBR12
        DEF  LBR13,LBR14,LBR15
 
 *
@@ -23,7 +24,7 @@ WS     BSS  >20
        BSS  >10
 STACK
 *
-* MUSIC Variables
+* Data Structure for each sound generator
 *
 SND1AD BSS  2             Address of current note in sound generator 1
        BSS  2             Elapsed time for current note
@@ -41,16 +42,18 @@ SND3AD BSS  2             Address of current note for sound generator 3
        BSS  1             Current Volume
        BSS  1             Current ADSR mode
 *
+* Other music data
+*
+SONGHD BSS  2             Address of song Header
+NOTERT BSS  2             Address of note duration ratio
+CURENV BSS  2             Index of current envelope
+TONSEL BSS  2
+*
 * KSCAN Variable
 *
 KEYTIM BSS  2             Time to wait before accepting repeated key
 CURKEY BSS  1             Ascii for most recent key
 PRVKEY BSS  1             Ascii for prev key
-*
-* selected envelope and tone generators
-*
-CURENV BSS  2
-TONSEL BSS  2
 
 *
 * Skip 8 bytes at >8378, used for GPL status block
@@ -102,7 +105,9 @@ LBR6   EQU  WS+13
 LBR7   EQU  WS+15
 LBR8   EQU  WS+17
 LBR9   EQU  WS+19
-
+LBR10  EQU  WS+21
+LBR11  EQU  WS+23
+LBR12  EQU  WS+25
 LBR13  EQU  WS+27
 LBR14  EQU  WS+29
 LBR15  EQU  WS+31
