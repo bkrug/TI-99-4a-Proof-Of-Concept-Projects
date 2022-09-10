@@ -11,19 +11,20 @@
        COPY 'NOTEVAL.asm'
        COPY 'CPUADR.asm'
 * Offsets within sound structure
-SNDELP  EQU  2
-SNDTIM  EQU  4
-SNDVOL  EQU  6
-SNDMOD  EQU  7
+SNDELP EQU  2
+SNDTIM EQU  4
+SNDVOL EQU  6
+SNDMOD EQU  7
+SNDRMN EQU  8
 * Current ADSR Modes
-MDATCK  EQU  0
-MDDECY  EQU  1
-MDSSTN  EQU  2
-MDRELS  EQU  3
+MDATCK EQU  0
+MDDECY EQU  1
+MDSSTN EQU  2
+MDRELS EQU  3
 * Codes for different tone generators
-TGN1    EQU  >8000
-TGN2    EQU  >A000
-TGN3    EQU  >C000
+TGN1   EQU  >8000
+TGN2   EQU  >A000
+TGN3   EQU  >C000
 *
 NOVOL  BYTE >0F
 SETVOL BYTE >10
@@ -42,6 +43,10 @@ PLYINT
 * Select default song
        LI   R2,MWRLD
        MOV  R2,@SONGHD
+* Default note-duration ratio to 60hz
+       MOV  R2,R3
+       AI   R3,6
+       MOV  R3,@NOTERT
 * Start Music
        LI   R0,TGN1
        MOV  *R2+,R1
@@ -54,8 +59,6 @@ PLYINT
        LI   R0,TGN3
        MOV  *R2+,R1
        BL   @STRTPL
-* Default note-duration ratio to 60hz
-       MOV  R2,@NOTERT
 *
        MOV  *R10+,R11
        RT
@@ -109,6 +112,8 @@ STRTPL
 * Let R2 = address of current note
        MOV  R5,R1
        MOV  *R5,R2
+* Clear note-duration ratio remainder
+       CLR  @SNDRMN(R1)
 *
        JMP  PLY1
 
@@ -141,7 +146,7 @@ PLY1   C    *R2,@REPTVL
        C    *R2,@STOPVL
        JEQ  STOPMS
 *
-* Play tone.
+* Play tone
 *
 * Look up tone-code based on note-code
        MOVB *R2,R5
@@ -154,13 +159,31 @@ PLY1   C    *R2,@REPTVL
        MOVB R8,@SGADR
        SWPB R8
        MOVB R8,@SGADR
+*
+* Set note duration
+*
+* Let R5 = address of note-duration ratio
+       MOV  @NOTERT,R5
+* Let R7 = note duration in base speed
+       MOVB @1(R2),R7
+       SRL  R7,8
+* Multiply duration by numerator
+* and add remainder from previous operation
+       MOV  *R5+,R6
+       MPY  R6,R7
+       A    @SNDRMN(R1),R8
+* Divide by divisor
+       MOV  *R5,R6
+       DIV  R6,R7
+* Store converted duration
+* And remainder from division
+       MOV  R7,@SNDTIM(R1)
+       MOV  R8,@SNDRMN(R1)
 * Set elapsed time
        CLR  @SNDELP(R1)
-* Set remaining time
-       MOVB @1(R2),R8
-       SRL  R8,8
-       MOV  R8,@SNDTIM(R1)
+*
 * Update position within music data
+*
        MOV  R2,*R1
 *
 * Select Envelope
