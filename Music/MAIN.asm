@@ -2,6 +2,7 @@
 *
        REF  STACK,WS                        Ref from VAR
        REF  PRVTCK,NXTTCK                   "
+       REF  CURMNU                          "
        REF  PLYINT,PLYMSC                   Ref from DIRMUSIC
        REF  KSCAN                           Ref from KSCAN
        REF  PRCKEY                          Ref from SELECT
@@ -41,6 +42,7 @@ BEGIN
 * Variable initialization routines
 *
        BL   @GROMCR              Copy pattern definitions from GROM to VRAM
+       SB   @CURMNU,@CURMNU      Set current menu to "main"
        BL   @DSPINT              Write instructions to screen
        BL   @PLYINT              Music variables
 *

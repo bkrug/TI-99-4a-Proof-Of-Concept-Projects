@@ -4,7 +4,7 @@
        DEF  SONGHD,NOTERT,CURENV,TONSEL
 *
        DEF  KEYTIM,CURKEY,PRVKEY
-       DEF  HERTZ
+       DEF  HERTZ,CURMNU
 *
        DEF  LBR0,LBR1,LBR2,LBR3,LBR4
        DEF  LBR5,LBR6,LBR7,LBR8,LBR9
@@ -60,6 +60,7 @@ CURKEY BSS  1             Ascii for most recent key
 PRVKEY BSS  1             Ascii for prev key
 *
 HERTZ  BSS  1             50hz VS 60hz
+CURMNU BSS  1             Byte representing visible menu
 
 *
 * Skip 8 bytes at >8378, used for GPL status block
