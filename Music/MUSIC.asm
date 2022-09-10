@@ -137,11 +137,12 @@ PLYONE
        MOV  *R1,R2
 * If R2 = 0, then skip
        JEQ  STOPMS
-* Look at next note?
+* Update times
        INC  @SNDELP(R1)
        DEC  @SNDTIM(R1)
+* Reached end of note?
        JNE  ENVELP
-* Yes
+* Yes, look at next note
        INCT R2
 * Reached end of music loop?
 PLY1   C    *R2,@REPTVL
@@ -173,12 +174,10 @@ PLY1   C    *R2,@REPTVL
        SRL  R7,8
 * Multiply duration by numerator
 * and add remainder from previous operation
-       MOV  *R5+,R6
-       MPY  R6,R7
+       MPY  *R5+,R7
        A    @SNDRMN(R1),R8
-* Divide by divisor
-       MOV  *R5,R6
-       DIV  R6,R7
+* Divide by denominator
+       DIV  *R5,R7
 * Store converted duration
 * And remainder from division
        MOV  R7,@SNDTIM(R1)
