@@ -55,7 +55,7 @@ PLYINT
        MOV  *R2+,R1
        BL   @STRTPL
 * Default note-duration ratio to 60hz
-       MOV  *R2,@NOTERT
+       MOV  R2,@NOTERT
 *
        MOV  *R10+,R11
        RT
