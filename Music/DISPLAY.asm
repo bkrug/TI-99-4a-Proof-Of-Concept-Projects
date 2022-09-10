@@ -1,7 +1,7 @@
        DEF  DSPINT,DSPENV
 *
-       REF  VDPADR,VDPWRT
-       REF  CURENV,CURMNU
+       REF  VDPADR,VDPWRT                   Ref from VDP
+       REF  CURENV,HERTZ,CURMNU             Ref from VAR
 
 HEADER TEXT '       ENVELOPE DEMO'
 CURRNT TEXT '     Envelope _   _0 hz'
@@ -128,13 +128,20 @@ MSGLP  AI   R4,>20
 DSPENV
        DECT R10
        MOV  R11,*R10
-*
-       LI   R0,>58
+* Display key that corresponds to current envelope
+       LI   R0,>30
        BL   @VDPADR
 *
        MOV  @CURENV,R1
        AI   R1,'A'
        SWPB R1
+       MOVB R1,@VDPWD
+* Display current electrical hertz
+       LI   R0,>34
+       BL   @VDPADR
+*
+       LI   R1,'6'*>100
+       AB   @HERTZ,R1
        MOVB R1,@VDPWD
 *
        MOV  *R10+,R11

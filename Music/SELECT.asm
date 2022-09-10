@@ -40,14 +40,18 @@ PRCKEY DECT R10
 *
 * Return to main menu
 *
-BCKMNU SB   @CURMNU,@CURMNU
+BCKMNU
+* Clear key selection
+       SB   @CURKEY,@CURKEY
+* Select main menu and redisplay
+       SB   @CURMNU,@CURMNU
        JMP  MMAIN1
 
 *
 * Main menu
 *
 MMAIN
-* Did the user decide to swap Hertz?
+* Did the user decide to swap electrical system?
        CB   @CURKEY,@CHGHTZ
        JEQ  SWPHTZ
 * No, did the user select a submenu?
@@ -59,10 +63,10 @@ MMAIN
        MOVB @CURKEY,R0
        SB   R0,@CURKEY
 * Record selection
+* If '1' pressed, set menu to >01, etc.
        SB   @LOWMNU,R0
-       SRL  R0,8
-       INC  R0
-       MOV  R0,@CURMNU
+       AI   R0,>100
+       MOVB R0,@CURMNU
 * Redisplay menu
 MMAIN1 BL   @DSPINT
 *
