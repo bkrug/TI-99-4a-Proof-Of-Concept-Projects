@@ -49,6 +49,8 @@ ASCII
        TEXT '/;P01AQZ'
 * Value when no key has been pressed in a column
 NOKEY  BYTE >FF
+FCTNKY BYTE FCTN
+ISFCTN BYTE FCTFLG
        EVEN
 * Amount of time to wait between key repeats
 WAIT   DATA 30
@@ -61,6 +63,8 @@ WAIT   DATA 30
 KSCAN
        DECT R10
        MOV  R11,*R10
+* Clear out previously scanned key
+       SB   @CURKEY,@CURKEY
 * Let R2 = current scan column
        LI   R2,COL0
 * Select column to scan
@@ -98,24 +102,35 @@ KSCAN4 SRL  R3,1
 *
 * R2 now has scan column
 * R4 now has scan row
+*
 * Let R2 = column in lower byte * 8
 KEYDWN AI   R2,-COL0
        SRL  R2,8-3
 * Let R4 = address in ASCII
        A    R2,R4
        AI   R4,ASCII
+* Is this the FCTN key?
+       CB   *R4,@FCTNKY
+       JNE  KEYD0
+* Yes, Set FCTN flag
+* and continue scanning
+       MOVB @ISFCTN,@CURKEY
+       LI   R2,COL1
+       JMP  KSCAN1
+* No, record scanned key without disturbing FTCN flag
+KEYD0  AB   *R4,@CURKEY       
 * Is this the same as previous key?
-       CB   *R4,@PRVKEY
+       CB   @CURKEY,@PRVKEY
        JNE  KD1
 * Yes, has enough time passed?
        MOV  @KEYTIM,R0
        JEQ  KD1
-* No, return to caller
+* No, clear scanned key and return to caller
+       SB   @CURKEY,@CURKEY
        DEC  @KEYTIM
        JMP  KEYRT
-* Save key
-KD1    MOVB *R4,@CURKEY
-       MOVB *R4,@PRVKEY
+* Retain CURKEY and mark that it is also the previous key
+KD1    MOVB @CURKEY,@PRVKEY
 * Reset repeat timer and store previous key
        MOV  @WAIT,@KEYTIM
 * Some button pressed, reset screen Saver
