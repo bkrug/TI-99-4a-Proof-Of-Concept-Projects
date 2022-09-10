@@ -2,6 +2,7 @@
 *
        REF  SND1AD,SND2AD,SND3AD              Ref from VAR
        REF  SONGHD,NOTERT,CURENV,LBR5         "
+       REF  HERTZ                             "
        REF  MWRLD                             Ref from TUNEWINTER
        REF  TTBL                              Ref from TONETABLE
 
@@ -46,7 +47,10 @@ PLYINT
 * Default note-duration ratio to 60hz
        MOV  R2,R3
        AI   R3,6
-       MOV  R3,@NOTERT
+       MOVB @HERTZ,R0
+       JEQ  INT1
+       AI   R3,4
+INT1   MOV  R3,@NOTERT
 * Start Music
        LI   R0,TGN1
        MOV  *R2+,R1
