@@ -38,12 +38,8 @@ ONE    BYTE >01
 PLYINT
        DECT R10
        MOV  R11,*R10
-* Select default envelope
-       CLR  @CURENV
-       INC  @CURENV
 * Select default song
-       LI   R2,MWRLD
-       MOV  R2,@SONGHD
+       MOV  @SONGHD,R2
 * Default note-duration ratio to 60hz
        MOV  R2,R3
        AI   R3,6

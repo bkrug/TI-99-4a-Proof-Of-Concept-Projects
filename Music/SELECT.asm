@@ -1,8 +1,9 @@
        DEF  PRCKEY
 *
+       REF  MWRLD,BEETHV                Ref from TUNEx
        REF  CURKEY,PRVKEY               Ref from VAR
        REF  CURENV                      "
-       REF  HERTZ,CURMNU                "
+       REF  SONGHD,HERTZ,CURMNU         "
        REF  DSPINT                      Ref from DISPLAY
        REF  PLYINT                      Ref from MUSIC
 
@@ -14,6 +15,9 @@ HGHMNU BYTE '2'
 *
 CHGHTZ BYTE '3'
 ESCKEY BYTE FCTFLG+'9'
+* Range of keys that can select a song
+LOWSNG BYTE 'A'
+HGHSNG BYTE 'B'
 * Range of keys that can select an envelope
 LOWENV BYTE 'A'
 HGHENV BYTE 'I'
@@ -76,6 +80,25 @@ MMAIN1 BL   @DSPINT
 * Song Sub-menu
 *
 MSONG
+* Did the user select a submenu?
+       CB   @CURKEY,@LOWSNG
+       JL   PRCRT
+       CB   @CURKEY,@HGHSNG
+       JH   PRCRT
+* Yes, clear out key press
+       MOVB @CURKEY,R0
+       SB   R0,@CURKEY
+* Record selection
+       SB   @LOWSNG,R0
+       SRL  R0,8-1
+       AI   R0,SNGLST
+       MOV  *R0,@SONGHD
+* Reset the song from the start
+       BL   @PLYINT
+*
+       JMP  PRCRT
+
+SNGLST DATA MWRLD,BEETHV
 
 *
 * Envelope Sub-menu

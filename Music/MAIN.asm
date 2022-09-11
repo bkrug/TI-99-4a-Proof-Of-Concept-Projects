@@ -2,12 +2,13 @@
 *
        REF  STACK,WS                        Ref from VAR
        REF  PRVTCK,NXTTCK                   "
-       REF  CURMNU                          "
+       REF  SONGHD,CURMNU,CURENV            "
        REF  PLYINT,PLYMSC                   Ref from DIRMUSIC
        REF  KSCAN                           Ref from KSCAN
        REF  PRCKEY                          Ref from SELECT
        REF  DSPINT,DSPENV                   Ref from DISPLAY
        REF  GROMCR                          Ref from GROM
+       REF  MWRLD                           Ref from TUNEMARIOW
 
 ********@*****@*********************@**************************
 *--------------------------------------------------------------
@@ -42,8 +43,14 @@ BEGIN
 * Variable initialization routines
 *
        BL   @GROMCR              Copy pattern definitions from GROM to VRAM
+*
+       CLR  @CURENV              Set default envelope
+       INC  @CURENV
        SB   @CURMNU,@CURMNU      Set current menu to "main"
        BL   @DSPINT              Write instructions to screen
+*
+       LI   R0,MWRLD
+       MOV  R0,@SONGHD
        BL   @PLYINT              Music variables
 *
 * Wait
