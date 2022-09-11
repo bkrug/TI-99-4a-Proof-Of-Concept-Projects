@@ -13,38 +13,99 @@ BEETHV DATA BEET1,BEET2,BEET3
        DATA 10,6
 
 BEET1
-* 4/4
-       BYTE C2,N4
-       BYTE D2,N4
-       BYTE E2,N4
-       BYTE F2,N4
-       BYTE G2,N4
+* 3/8
+       BYTE E3,N16
+       BYTE Ds3,N16
+*
+       BYTE E3,N16
+       BYTE Ds3,N16
+       BYTE E3,N16
+       BYTE B2,N16
+       BYTE D3,N16
+       BYTE C3,N16
+*
+       BYTE A2,N8
+       BYTE REST,N16
+       BYTE C2,N16
+       BYTE E2,N16
+       BYTE A2,N16
+*
+       BYTE B2,N8
+       BYTE REST,N16
+       BYTE E2,N16
+       BYTE Gs2,N16
+       BYTE B2,N16
+*
+       BYTE C3,N8
+       BYTE REST,N16
+       BYTE E2,N16
+       BYTE E3,N16
+       BYTE Ds3,N16
+*
+       BYTE E3,N16
+       BYTE Ds3,N16
+       BYTE E3,N16
+       BYTE B2,N16
+       BYTE D3,N16
+       BYTE C3,N16
+*
+       BYTE A2,N8
+       BYTE REST,N16
+       BYTE C2,N16
+       BYTE E2,N16
+       BYTE A2,N16
+* Measure 7
+       BYTE B2,N8
+       BYTE REST,N16
+       BYTE D2,N16
+       BYTE C3,N16
+       BYTE B2,N16
+*
        BYTE A2,N4
-       BYTE B2,N4
 *
        DATA REPEAT,BEET1
 
 BEET2
-* 4/4
-       BYTE C3,N4
-       BYTE D3,N4
-       BYTE E3,N4
-       BYTE F3,N4
-       BYTE G3,N4
-       BYTE A3,N4
-       BYTE B3,N4
-*
-       DATA REPEAT,BEET2
+* 3/8
+       DATA STOP,0
 
 BEET3
-* 4/4
-       BYTE C4,N4
-       BYTE D4,N4
-       BYTE E4,N4
-       BYTE F4,N4
-       BYTE G4,N4
-       BYTE A4,N4
-       BYTE B4,N4
+* 3/8
+       BYTE REST,N8
+*
+       BYTE REST,N8*3
+*
+       BYTE A0,N16
+       BYTE E1,N16
+       BYTE A1,N16
+       BYTE REST,N8DOT
+*
+       BYTE B0,N16
+       BYTE E1,N16
+       BYTE Gs1,N16
+       BYTE REST,N8DOT
+*
+       BYTE A0,N16
+       BYTE E1,N16
+       BYTE A1,N16
+       BYTE REST,N8DOT
+*
+       BYTE REST,N8*3
+*
+       BYTE A0,N16
+       BYTE E1,N16
+       BYTE A1,N16
+       BYTE REST,N8DOT
+* Measure 7
+       BYTE B0,N16
+       BYTE E1,N16
+       BYTE Gs1,N16
+       BYTE REST,N8DOT
+*
+       BYTE A0,N16
+       BYTE E1,N16
+       BYTE A1,N16
+       BYTE REST,N16
 *
        DATA REPEAT,BEET3
 
