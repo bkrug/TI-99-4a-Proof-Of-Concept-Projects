@@ -1,5 +1,32 @@
        DEF  MWRLD
 
+*
+* Song Headers include two pairs of 16-bit numbers
+* Each pair represents a note-duration ratio.
+* One for 60hz, one for 50hz.
+*
+* The default duration of a quarter note is 24 VDP interrupts.
+* The ratios allow you to change that duration.
+* See the first 16-bit number as a numerator and the second as a denominator.
+* A ratio or fraction is used instead of specifying
+* Beats per Minute in order to give the programmer more control.
+* For example, in 60hz, a ratio of 4:3 will result in
+* exactly 112.5 bpm, with few rounding issues.
+* But recording bpm as integers and asking the
+* program to do the math would result in more rounding issues.
+*
+* In 60hz, a ratio of 1:1 results in quarter note
+* durations of 24/60th of a second and a tempo of
+* 150 quarter notes per minute.
+* A ratio of 2:1 doubles the note duration and
+* cuts the tempo in half.
+*
+* In 50hz, a ratio of 1:1 results in quarter note
+* durations of 24/50th of a second and a tempo of
+* 125 quarter notes per minute.
+* A ratio of 5:6 results in 150 quarter notes per minute.
+*
+
        COPY 'NOTEVAL.asm'
        COPY 'CONST.asm'
 
