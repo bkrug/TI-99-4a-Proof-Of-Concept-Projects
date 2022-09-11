@@ -4,7 +4,7 @@
        REF  CURENV,HERTZ,CURMNU             Ref from VAR
 
 HEADER TEXT '       ENVELOPE DEMO'
-CURRNT TEXT '     Envelope _   _0 hz'
+CURRNT TEXT '     Envelope _   _0hz'
 PRESS  TEXT 'Press:'
 PRESS0
 
