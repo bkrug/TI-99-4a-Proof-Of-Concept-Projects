@@ -2,8 +2,8 @@
 * 16-bit symbols used to signal something
 * besides a note or a rest
 *
-STOP   EQU  >CFFF       Stop playing a signal/tune at end
-REPEAT EQU  >CFFE       Play signal/tune as repeated loop
+STOP   EQU  >FFFF       Stop playing a signal/tune at end
+REPEAT EQU  >FFFE       Play signal/tune as repeated loop
 
 *
 * Durantion values
